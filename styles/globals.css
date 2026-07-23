@@ -1,0 +1,40 @@
+@import "tailwindcss";
+@import 'locomotive-scroll/dist/locomotive-scroll.css';
+/* custom */
+:root {
+  --container: 1100px;
+}
+
+html,body,#__next { height:100%; }
+body {
+  @apply bg-[linear-gradient(200deg,#e8e0d1,#fcf9f2)] text-[#dedede] antialiased;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+.container {
+  max-width: var(--container);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 48px 20px;
+}
+.card-photo { @apply rounded-xl overflow-hidden bg-gradient-to-b from-[#e8e0d1] to-[#fcf9f2]; }
+.btn-accent { @apply bg-accent text-[#dedede] px-4 py-2 rounded-lg font-semibold; }
+.btn-ghost { @apply border border-white/6 text-white/90 px-4 py-2 rounded-lg; }
+
+
+/* fade transition for slides (JS toggles 'opacity-100' / 'opacity-0') */
+.slide { transition: opacity 1000ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .slide { transition: none !important; }
+
+  
+}
+
+@theme {
+  --animate-scale-up: scale-up 0.5s ease-in-out forwards;
+  --p-color-sch: [#797979];
+
+  @keyframes scale-up {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+}
