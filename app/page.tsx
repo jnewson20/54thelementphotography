@@ -98,7 +98,7 @@ export default function Home() {
               ))
             : portfolio.map((p, index) => (
                 <div key={p.id} data-reveal className="reveal group relative h-72 overflow-hidden rounded-[28px]" style={{ transitionDelay: `${index * 80}ms` }}>
-                  <div className="card-photo h-full w-full">
+                  <div className="card-photo relative h-full w-full">
                     {p.src ? (
                       <Image
                         src={toMediaSrc(p.src)}

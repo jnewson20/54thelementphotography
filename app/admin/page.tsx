@@ -114,6 +114,26 @@ function SectionCard({ title, children }: { title: string; children: React.React
   );
 }
 
+function PreviewImage({ src, alt, width, height, className, sizes, eager = false }: { src?: string; alt: string; width: number; height: number; className: string; sizes: string; eager?: boolean }) {
+  const resolvedSrc = toMediaSrc((src || "").trim());
+
+  if (!resolvedSrc) {
+    return <div className={`${className} bg-[#e7dcc8]`} />;
+  }
+
+  return (
+    <Image
+      src={resolvedSrc}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+      sizes={sizes}
+      loading={eager ? "eager" : "lazy"}
+    />
+  );
+}
+
 function ImageEditor({ item, onChange, onRemove, onUpload }: { item: AdminImage; onChange: (patch: Partial<AdminImage>) => void; onRemove: () => void; onUpload: (file: File) => void }) {
   return (
     <div className="rounded-2xl border border-[#d8cbb1]/40 bg-white/70 p-4">
@@ -122,7 +142,7 @@ function ImageEditor({ item, onChange, onRemove, onUpload }: { item: AdminImage;
         <button type="button" onClick={onRemove} className="rounded-full border border-[#071018]/10 px-3 py-1 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove</button>
       </div>
       <div className="mt-3 overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#f2e9d9]">
-        <Image src={toMediaSrc(item.src)} alt={item.alt || ""} width={1200} height={360} className="h-36 w-full object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+        <PreviewImage src={item.src} alt={item.alt || ""} width={1200} height={360} className="h-36 w-full object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
       </div>
       <div className="mt-3 space-y-2">
         <label className="block text-sm text-[#4d5561]">
@@ -438,7 +458,7 @@ export default function AdminPage() {
 
   const resetClientLoginBackground = () => {
     removeManagedImages([content.clientLoginBackground]);
-    setContent((current) => ({ ...current, clientLoginBackground: "/assets/client-bg.jpg" }));
+    setContent((current) => ({ ...current, clientLoginBackground: "/assets/about-1.jpg" }));
   };
 
   const resetClientCoverImage = (clientIndex: number) => {
@@ -446,25 +466,25 @@ export default function AdminPage() {
     const next = [...content.clients];
     next[clientIndex] = {
       ...next[clientIndex],
-      coverImage: "/assets/client-bg.jpg",
+      coverImage: "/assets/about-1.jpg",
     };
     updateClients(next);
   };
 
   const addCarouselSlide = () => {
-    updateHomeCarousel([...content.homeCarousel, { id: createId("carousel"), src: "/assets/hero1.jpg", alt: "New slide" }]);
+    updateHomeCarousel([...content.homeCarousel, { id: createId("carousel"), src: "/assets/about-1.jpg", alt: "New slide" }]);
   };
 
   const addPortfolioItem = () => {
     if (content.homePortfolio.length >= 3) return;
-    updatePortfolio([...content.homePortfolio, { id: createId("portfolio"), title: "New portfolio item", src: "/assets/portfolio1.jpg" }]);
+    updatePortfolio([...content.homePortfolio, { id: createId("portfolio"), title: "New portfolio item", src: "/assets/about-1.jpg" }]);
   };
 
   const addGalleryImage = (groupIndex: number) => {
     const next = [...content.gallery];
     next[groupIndex] = {
       ...next[groupIndex],
-      images: [...next[groupIndex].images, { id: createId("gallery"), src: "/assets/portraits-1.jpg", alt: "New image" }],
+      images: [...next[groupIndex].images, { id: createId("gallery"), src: "/assets/about-1.jpg", alt: "New image" }],
     };
     updateGallery(next);
   };
@@ -478,7 +498,7 @@ export default function AdminPage() {
         username: `client-${Math.random().toString(36).slice(2, 6)}`,
         password: "change-me",
         galleryTitle: "Client Gallery",
-        coverImage: "/assets/client-bg.jpg",
+        coverImage: "/assets/about-1.jpg",
         images: [],
       },
     ]);
@@ -488,7 +508,7 @@ export default function AdminPage() {
     const next = [...content.clients];
     next[clientIndex] = {
       ...next[clientIndex],
-      images: [...next[clientIndex].images, { id: createId("client-image"), src: "/assets/portraits-1.jpg", alt: "New client image" }],
+      images: [...next[clientIndex].images, { id: createId("client-image"), src: "/assets/about-1.jpg", alt: "New client image" }],
     };
     updateClients(next);
   };
@@ -838,7 +858,7 @@ export default function AdminPage() {
                   <input type="checkbox" checked={Boolean(selectedCarouselIds[slide.id])} onChange={() => toggleCarouselSelection(slide.id)} />
                   Select for delete
                 </label>
-                <Image src={toMediaSrc(slide.src)} alt={slide.alt || ""} width={1200} height={440} className="h-44 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                <PreviewImage src={slide.src} alt={slide.alt || ""} width={1200} height={440} className="h-44 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 50vw" eager={index === 0} />
                 <div className="mt-3 space-y-2">
                   <div className="flex gap-2">
                     <button type="button" disabled={index === 0} onClick={() => moveCarouselSlide(index, index - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -892,7 +912,7 @@ export default function AdminPage() {
                 } bg-white/70 p-4`}
               >
                 <div className="mb-2 inline-block rounded-full bg-[#d8cbb1]/20 px-2 py-1 text-xs text-[#4d5561]">Position {index + 1}</div>
-                <Image src={toMediaSrc(item.src)} alt={item.title} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+                <PreviewImage src={item.src} alt={item.title} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 33vw" eager={index === 0} />
                 <div className="mt-3 space-y-2">
                   <div className="flex gap-2">
                     <button type="button" disabled={index === 0} onClick={() => movePortfolioItem(index, index - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -938,7 +958,7 @@ export default function AdminPage() {
                         <input type="checkbox" checked={Boolean((selectedGalleryImageIds[group.key] || {})[image.id])} onChange={() => toggleGalleryImageSelection(group.key, image.id)} />
                         Select for delete
                       </label>
-                      <Image src={toMediaSrc(image.src)} alt={image.alt || ""} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                      <PreviewImage src={image.src} alt={image.alt || ""} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
                       <div className="mt-3 space-y-2">
                         <div className="flex gap-2">
                           <button type="button" disabled={imageIndex === 0} onClick={() => moveGalleryImage(groupIndex, imageIndex, imageIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -969,7 +989,7 @@ export default function AdminPage() {
           </label>
           <button type="button" onClick={resetClientLoginBackground} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove upload</button>
           <div className="overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#071018]">
-            <Image src={toMediaSrc(content.clientLoginBackground)} alt="Client login background" width={1400} height={560} className="h-56 w-full object-cover" sizes="100vw" />
+            <PreviewImage src={content.clientLoginBackground} alt="Client login background" width={1400} height={560} className="h-56 w-full object-cover" sizes="100vw" eager />
           </div>
         </SectionCard>
 
@@ -1006,7 +1026,7 @@ export default function AdminPage() {
                 <div className="mt-4 rounded-2xl border border-[#d8cbb1]/40 bg-white/70 p-4">
                   <p className="text-sm font-medium text-[#4d5561]">Client cover image</p>
                   <div className="mt-2 overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#071018]">
-                    <Image src={toMediaSrc(client.coverImage || "/assets/client-bg.jpg")} alt={`${client.name} cover`} width={1200} height={400} className="h-40 w-full object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                    <PreviewImage src={client.coverImage || "/assets/about-1.jpg"} alt={`${client.name} cover`} width={1200} height={400} className="h-40 w-full object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
                   </div>
                   <label className="mt-3 block text-sm text-[#4d5561]">
                     Upload cover image
@@ -1034,7 +1054,7 @@ export default function AdminPage() {
                         <input type="checkbox" checked={Boolean((selectedClientImageIds[client.id] || {})[image.id])} onChange={() => toggleClientImageSelection(client.id, image.id)} />
                         Select for delete
                       </label>
-                      <Image src={toMediaSrc(image.src)} alt={image.alt || ""} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                      <PreviewImage src={image.src} alt={image.alt || ""} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
                       <div className="mt-3 space-y-2">
                         <div className="flex gap-2">
                           <button type="button" disabled={imageIndex === 0} onClick={() => moveClientImage(clientIndex, imageIndex, imageIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>

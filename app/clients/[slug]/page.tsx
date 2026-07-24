@@ -42,7 +42,7 @@ export default function ClientPage() {
   const rawSlug = params?.slug;
   const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
   const normalizedSlug = normalizeSlugValue(slug);
-  const [viewData, setViewData] = useState<ClientViewData>({ client: null, title: "Private gallery", images: [], coverImage: "/assets/client-bg.jpg" });
+  const [viewData, setViewData] = useState<ClientViewData>({ client: null, title: "Private gallery", images: [], coverImage: "/assets/about-1.jpg" });
   const [checkingAccess, setCheckingAccess] = useState(true);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function ClientPage() {
         client,
         title: client ? client.galleryTitle || client.name : "Private gallery",
         images: client ? client.images.map((image) => image.src) : [],
-        coverImage: client?.coverImage || "/assets/client-bg.jpg",
+        coverImage: client?.coverImage || "/assets/about-1.jpg",
         note: client ? `Welcome ${client.name}. Access your private gallery below.` : undefined,
       });
       setCheckingAccess(false);
@@ -109,7 +109,7 @@ export default function ClientPage() {
           alt={`${viewData.client.name} cover`}
           fill
           className="h-full w-full object-cover"
-          priority
+          loading="eager"
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/45" />

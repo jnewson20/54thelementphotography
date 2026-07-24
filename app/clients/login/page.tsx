@@ -13,7 +13,7 @@ export default function ClientLoginPage() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [background, setBackground] = useState("/assets/client-bg.jpg");
+  const [background, setBackground] = useState("/assets/about-1.jpg");
   const [clients, setClients] = useState<Array<{ username: string; password: string }>>([]);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function ClientLoginPage() {
           alt="Client background"
           fill
           className="h-full w-full object-cover"
-          priority
+          loading="eager"
           sizes="100vw"
         />
       </div>
