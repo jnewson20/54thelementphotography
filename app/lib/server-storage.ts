@@ -6,6 +6,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 const S3_REGION = process.env.S3_REGION;
@@ -192,6 +193,22 @@ export async function deleteS3Source(src: string) {
   );
 
   return true;
+}
+
+export async function presignS3Url(src: string, expiresIn = 3600) {
+  const client = getS3Client();
+  if (!client) return null;
+
+  const key = parseS3KeyFromUrl(src);
+  if (!key) return null;
+
+  const url = await getSignedUrl(
+    client,
+    new GetObjectCommand({ Bucket: S3_BUCKET_NAME, Key: key }),
+    { expiresIn }
+  );
+
+  return url;
 }
 
 export async function readS3Source(src: string) {

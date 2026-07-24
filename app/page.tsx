@@ -10,6 +10,7 @@ import { toMediaSrc } from "./lib/media";
 export default function Home() {
   const [content, setContent] = useState<AdminPageContent>(getDefaultContent());
   const [heroReady, setHeroReady] = useState(false);
+  const [portfolioReady, setPortfolioReady] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -18,6 +19,7 @@ export default function Home() {
         setContent(loadedContent);
       } finally {
         setHeroReady(true);
+        setPortfolioReady(true);
       }
     })();
 
@@ -89,19 +91,24 @@ export default function Home() {
       <section id="work" className="container mt-12 cv-auto">
         <h2 data-reveal className="reveal mb-6 text-2xl font-semibold">Portfolio</h2>
         <div className="grid gap-4 md:grid-cols-3">
-          {portfolio.map((p, index) => (
-            <div key={p.id} data-reveal className="reveal group relative h-72 overflow-hidden rounded-[28px]" style={{ transitionDelay: `${index * 80}ms` }}>
-              <div className="card-photo h-full w-full">
-                {p.src ? (
-                  <img src={toMediaSrc(p.src)} alt={p.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gray-200 text-xs text-gray-600">
-                    No image
+          {!portfolioReady
+            ? [1, 2, 3].map((n) => (
+                <div key={n} className="group relative h-72 overflow-hidden rounded-[28px] animate-pulse bg-[#d8cbb1]/30" />
+              ))
+            : portfolio.map((p, index) => (
+                <div key={p.id} data-reveal className="reveal group relative h-72 overflow-hidden rounded-[28px]" style={{ transitionDelay: `${index * 80}ms` }}>
+                  <div className="card-photo h-full w-full">
+                    {p.src ? (
+                      <img src={toMediaSrc(p.src)} alt={p.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gray-200 text-xs text-gray-600">
+                        No image
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          ))}
+                </div>
+              ))
+          }
         </div>
       </section>
 

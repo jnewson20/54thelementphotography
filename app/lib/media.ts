@@ -1,12 +1,5 @@
 export function toMediaSrc(src: string) {
-  if (!src) return src;
-
-  const isHttp = src.startsWith("http://") || src.startsWith("https://");
-  const isS3Url = src.includes(".amazonaws.com/");
-
-  if (isHttp && isS3Url) {
-    return `/api/media?src=${encodeURIComponent(src)}`;
-  }
-
-  return src;
+  // S3 bucket is public — return the URL directly for maximum performance.
+  // The /api/media proxy is kept as a fallback path but no longer needed for delivery.
+  return src || "";
 }

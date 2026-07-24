@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isS3Configured, isS3Source, readS3Source } from "../../lib/server-storage";
+import { isS3Configured, isS3Source, presignS3Url } from "../../lib/server-storage";
+
+// Pre-signed URL TTL: 1 hour. Browser redirect cache matches this.
+const PRESIGN_TTL = 3600;
 
 export async function GET(request: NextRequest) {
   const src = request.nextUrl.searchParams.get("src");
@@ -12,15 +15,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const file = await readS3Source(src);
-    if (!file) {
+    const signedUrl = await presignS3Url(src, PRESIGN_TTL);
+    if (!signedUrl) {
       return NextResponse.json({ error: "media not found" }, { status: 404 });
     }
 
-    return new NextResponse(file.body, {
+    // Redirect browser directly to S3 — no data proxied through this server.
+    // Cache for ~50 min so browsers reuse the redirect before the signed URL expires.
+    return NextResponse.redirect(signedUrl, {
+      status: 302,
       headers: {
-        "Content-Type": file.contentType,
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": `public, max-age=3000, s-maxage=3000`,
       },
     });
   } catch {
