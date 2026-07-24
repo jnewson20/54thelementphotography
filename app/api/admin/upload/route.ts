@@ -4,7 +4,27 @@ import path from "path";
 import crypto from "crypto";
 import { isS3Configured, uploadImageToS3 } from "../../../lib/server-storage";
 
-const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
+const ASSETS_DIR = path.join(process.cwd(), "public", "assets");
+
+type UploadSection =
+  | "hero"
+  | "home-portfolio"
+  | "gallery-portrait"
+  | "gallery-wedding"
+  | "gallery-branding"
+  | "client-login"
+  | "client-cover"
+  | "client-gallery";
+
+const LOCAL_SECTION_DIRS: Record<Exclude<UploadSection, "client-gallery">, string[]> = {
+  hero: ["hero"],
+  "home-portfolio": ["home portfolio"],
+  "gallery-portrait": ["gallery", "portrait"],
+  "gallery-wedding": ["gallery", "wedding"],
+  "gallery-branding": ["gallery", "branding:media"],
+  "client-login": ["client login"],
+  "client-cover": ["client login"],
+};
 
 function extFromType(type: string) {
   const map: Record<string, string> = {
@@ -22,25 +42,51 @@ function extFromType(type: string) {
   return map[type.toLowerCase()] || ".bin";
 }
 
-async function saveLocally(buffer: Buffer, mimeType: string) {
-  await fs.mkdir(UPLOADS_DIR, { recursive: true });
+function toAssetSrc(filePath: string) {
+  const relative = path.relative(path.join(process.cwd(), "public"), filePath);
+  const normalized = relative.split(path.sep).join("/");
+  return `/${normalized.split("/").map((segment) => encodeURIComponent(segment)).join("/")}`;
+}
+
+async function saveToAssetSection(buffer: Buffer, mimeType: string, section: Exclude<UploadSection, "client-gallery">) {
+  const destinationDir = path.join(ASSETS_DIR, ...LOCAL_SECTION_DIRS[section]);
+  await fs.mkdir(destinationDir, { recursive: true });
 
   const ext = extFromType(mimeType);
   const fileName = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`;
-  const outputPath = path.join(UPLOADS_DIR, fileName);
+  const outputPath = path.join(destinationDir, fileName);
 
   await fs.writeFile(outputPath, buffer);
 
-  return `/uploads/${fileName}`;
+  return toAssetSrc(outputPath);
 }
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const uploaded = formData.get("file");
+    const section = formData.get("section");
 
     if (!(uploaded instanceof File)) {
       return NextResponse.json({ error: "file is required" }, { status: 400 });
+    }
+
+    if (typeof section !== "string") {
+      return NextResponse.json({ error: "section is required" }, { status: 400 });
+    }
+
+    const typedSection = section as UploadSection;
+    if (
+      typedSection !== "hero" &&
+      typedSection !== "home-portfolio" &&
+      typedSection !== "gallery-portrait" &&
+      typedSection !== "gallery-wedding" &&
+      typedSection !== "gallery-branding" &&
+      typedSection !== "client-login" &&
+      typedSection !== "client-cover" &&
+      typedSection !== "client-gallery"
+    ) {
+      return NextResponse.json({ error: "invalid section" }, { status: 400 });
     }
 
     if (!uploaded.type.startsWith("image/")) {
@@ -50,7 +96,11 @@ export async function POST(request: Request) {
     const arrayBuffer = await uploaded.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    if (isS3Configured()) {
+    if (typedSection === "client-gallery") {
+      if (!isS3Configured()) {
+        return NextResponse.json({ error: "S3 must be configured for client gallery uploads." }, { status: 500 });
+      }
+
       try {
         const src = await uploadImageToS3(buffer, uploaded.type);
         if (!src) {
@@ -59,21 +109,12 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ src });
       } catch (error) {
-        const allowFallback = process.env.S3_UPLOAD_FALLBACK_TO_LOCAL !== "false";
-        if (allowFallback) {
-          const fallbackSrc = await saveLocally(buffer, uploaded.type);
-          return NextResponse.json({
-            src: fallbackSrc,
-            warning: "S3 upload failed. Saved locally instead. Check AWS credentials to re-enable S3 uploads.",
-          });
-        }
-
         const message = error instanceof Error ? error.message : "Unknown S3 error.";
         return NextResponse.json({ error: `Unable to upload image to S3. ${message}` }, { status: 500 });
       }
     }
 
-    const src = await saveLocally(buffer, uploaded.type);
+    const src = await saveToAssetSection(buffer, uploaded.type, typedSection);
     return NextResponse.json({ src });
   } catch {
     return NextResponse.json({ error: "Unable to upload image." }, { status: 500 });

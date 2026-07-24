@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { getDefaultContent, type AdminPageContent } from "../../../admin/content";
-import { isS3Configured, readS3ContentObject, writeS3ContentObject } from "../../../lib/server-storage";
 
 const DATA_DIR = path.join(process.cwd(), "storage");
 const CONTENT_PATH = path.join(DATA_DIR, "admin-content.json");
@@ -30,9 +29,7 @@ function normalizeContent(parsed: Partial<AdminPageContent>): AdminPageContent {
 
 export async function GET() {
   try {
-    const raw = isS3Configured()
-      ? await readS3ContentObject()
-      : await fs.readFile(CONTENT_PATH, "utf8");
+    const raw = await fs.readFile(CONTENT_PATH, "utf8");
     if (!raw) {
       return NextResponse.json({ content: getDefaultContent() });
     }
@@ -50,12 +47,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "content is required" }, { status: 400 });
     }
 
-    if (isS3Configured()) {
-      await writeS3ContentObject(JSON.stringify(body.content, null, 2));
-    } else {
-      await ensureDataDir();
-      await fs.writeFile(CONTENT_PATH, JSON.stringify(body.content, null, 2), "utf8");
-    }
+    await ensureDataDir();
+    await fs.writeFile(CONTENT_PATH, JSON.stringify(body.content, null, 2), "utf8");
 
     return NextResponse.json({ ok: true });
   } catch {

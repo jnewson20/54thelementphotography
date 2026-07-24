@@ -3,7 +3,7 @@
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchContent } from "../../admin/content";
+import { SECTION_DEFAULT_IMAGE_SRC, fetchContent } from "../../admin/content";
 import { saveClientSession } from "../../lib/auth";
 import { toMediaSrc } from "../../lib/media";
 
@@ -13,7 +13,7 @@ export default function ClientLoginPage() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [background, setBackground] = useState("/assets/about-1.jpg");
+  const [background, setBackground] = useState(SECTION_DEFAULT_IMAGE_SRC.clientLoginBackground);
   const [clients, setClients] = useState<Array<{ username: string; password: string }>>([]);
 
   useEffect(() => {

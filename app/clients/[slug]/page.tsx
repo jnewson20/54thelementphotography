@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
 import { useParams, useRouter } from "next/navigation";
-import { fetchContent, type AdminClient } from "../../admin/content";
+import { DEFAULT_CLIENT_COVER_IMAGE, fetchContent, type AdminClient } from "../../admin/content";
 import { clearClientSession, isClientSessionValid } from "../../lib/auth";
 import { toMediaSrc } from "../../lib/media";
 import ClientGallery from "../client-gallery";
@@ -42,7 +42,7 @@ export default function ClientPage() {
   const rawSlug = params?.slug;
   const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
   const normalizedSlug = normalizeSlugValue(slug);
-  const [viewData, setViewData] = useState<ClientViewData>({ client: null, title: "Private gallery", images: [], coverImage: "/assets/about-1.jpg" });
+  const [viewData, setViewData] = useState<ClientViewData>({ client: null, title: "Private gallery", images: [], coverImage: DEFAULT_CLIENT_COVER_IMAGE });
   const [checkingAccess, setCheckingAccess] = useState(true);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function ClientPage() {
         client,
         title: client ? client.galleryTitle || client.name : "Private gallery",
         images: client ? client.images.map((image) => image.src) : [],
-        coverImage: client?.coverImage || "/assets/about-1.jpg",
+        coverImage: client?.coverImage || DEFAULT_CLIENT_COVER_IMAGE,
         note: client ? `Welcome ${client.name}. Access your private gallery below.` : undefined,
       });
       setCheckingAccess(false);

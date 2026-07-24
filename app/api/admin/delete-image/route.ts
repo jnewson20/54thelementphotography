@@ -7,16 +7,42 @@ type DeletePayload = {
   src?: string;
 };
 
-const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
+const PUBLIC_DIR = path.join(process.cwd(), "public");
+const MANAGED_ASSET_PREFIXES = [
+  "/assets/hero/",
+  "/assets/home%20portfolio/",
+  "/assets/home portfolio/",
+  "/assets/gallery/portrait/",
+  "/assets/gallery/wedding/",
+  "/assets/gallery/branding%3Amedia/",
+  "/assets/gallery/branding:media/",
+  "/assets/client%20login/",
+  "/assets/client login/",
+];
 
-function resolveUploadPath(src: string) {
-  if (!src.startsWith("/uploads/")) {
+function resolveManagedLocalPath(src: string) {
+  if (!src.startsWith("/")) {
     return null;
   }
 
-  const fileName = path.basename(src);
-  const resolved = path.join(UPLOADS_DIR, fileName);
-  return resolved;
+  const normalized = src.trim();
+  const isManagedAsset = MANAGED_ASSET_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+  if (!isManagedAsset) {
+    return null;
+  }
+
+  let decodedPath = normalized;
+  try {
+    decodedPath = decodeURIComponent(normalized);
+  } catch {
+    return null;
+  }
+  const absolutePath = path.resolve(PUBLIC_DIR, `.${decodedPath}`);
+  if (!absolutePath.startsWith(PUBLIC_DIR)) {
+    return null;
+  }
+
+  return absolutePath;
 }
 
 export async function POST(request: Request) {
@@ -33,7 +59,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const targetPath = resolveUploadPath(src);
+    const targetPath = resolveManagedLocalPath(src);
     if (!targetPath) {
       return NextResponse.json({ error: "invalid src" }, { status: 400 });
     }

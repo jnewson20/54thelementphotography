@@ -57,6 +57,41 @@ const STORAGE_KEY = "54th-element-admin-content-v1";
 const CLIENT_AUTH_STORAGE_KEY = "54th-element-admin-client-auth-v1";
 const CONTENT_API_PATH = "/api/admin/content";
 
+function localAssetPath(...segments: string[]) {
+  return `/assets/${segments.map((segment) => encodeURIComponent(segment)).join("/")}`;
+}
+
+export const SECTION_DEFAULT_IMAGE_SRC = {
+  hero: [
+    localAssetPath("hero", "Kordaja Maternity-2.jpg"),
+    localAssetPath("hero", "Newson Fam-33.jpg"),
+    localAssetPath("hero", "Noah-4.jpg"),
+  ],
+  homePortfolio: [
+    localAssetPath("home portfolio", "Korea Southaven-09.jpg"),
+    localAssetPath("home portfolio", "Kyla  Mocha-26.jpg"),
+    localAssetPath("home portfolio", "Newson Fam-43.jpg"),
+  ],
+  galleryPortrait: [
+    localAssetPath("gallery", "portrait", "JQ-38.jpg"),
+    localAssetPath("gallery", "portrait", "JQ-6.jpg"),
+    localAssetPath("gallery", "portrait", "Kordaja Maternity-2.jpg"),
+  ],
+  galleryWedding: [
+    localAssetPath("gallery", "wedding", "JQ Finals-9.jpg"),
+    localAssetPath("gallery", "wedding", "The Walker's-124.jpg"),
+    localAssetPath("gallery", "wedding", "The Walker's-346.jpg"),
+  ],
+  galleryBranding: [
+    localAssetPath("gallery", "branding:media", "Du-16.jpg"),
+    localAssetPath("gallery", "branding:media", "Du-22.jpg"),
+    localAssetPath("gallery", "branding:media", "MSB-107.jpg"),
+  ],
+  clientLoginBackground: localAssetPath("client login", "Newson Fam-1 copy.jpg"),
+};
+
+export const DEFAULT_CLIENT_COVER_IMAGE = SECTION_DEFAULT_IMAGE_SRC.clientLoginBackground;
+
 type ClientAuthSnapshot = {
   id: string;
   name: string;
@@ -99,7 +134,7 @@ function toClientAuthSnapshot(clients: AdminClient[]): ClientAuthSnapshot[] {
     username: client.username,
     password: client.password,
     galleryTitle: client.galleryTitle,
-    coverImage: client.coverImage || "/assets/about-1.jpg",
+    coverImage: client.coverImage || DEFAULT_CLIENT_COVER_IMAGE,
   }));
 }
 
@@ -147,7 +182,7 @@ function mergeClientsWithAuth(baseClients: AdminClient[], authClients: ClientAut
         username: authClient.username,
         password: authClient.password,
         galleryTitle: authClient.galleryTitle || authClient.name,
-        coverImage: authClient.coverImage || "/assets/about-1.jpg",
+        coverImage: authClient.coverImage || DEFAULT_CLIENT_COVER_IMAGE,
         images: [],
       });
     }
@@ -219,7 +254,7 @@ async function normalizeContentForStorage(content: AdminPageContent, options: { 
       content.clients.map(async (client) => ({
         ...client,
         // Preserve original quality for client delivery assets.
-        coverImage: client.coverImage || "/assets/about-1.jpg",
+        coverImage: client.coverImage || DEFAULT_CLIENT_COVER_IMAGE,
         images: client.images.map((image) => ({ ...image })),
       }))
     ),
@@ -244,45 +279,45 @@ export async function compressImageDataUrl(src: string) {
 export function getDefaultContent(): AdminPageContent {
   return {
     homeCarousel: [
-      { id: "hero-1", src: "/assets/about-1.jpg", alt: "Hero 1" },
-      { id: "hero-2", src: "/assets/about-1.jpg", alt: "Hero 2" },
-      { id: "hero-3", src: "/assets/about-1.jpg", alt: "Hero 3" },
+      { id: "hero-1", src: SECTION_DEFAULT_IMAGE_SRC.hero[0], alt: "Hero 1" },
+      { id: "hero-2", src: SECTION_DEFAULT_IMAGE_SRC.hero[1], alt: "Hero 2" },
+      { id: "hero-3", src: SECTION_DEFAULT_IMAGE_SRC.hero[2], alt: "Hero 3" },
     ],
     homePortfolio: [
-      { id: "p-1", title: "Editorial Series", src: "/assets/about-1.jpg" },
-      { id: "p-2", title: "Landscape Study", src: "/assets/about-1.jpg" },
-      { id: "p-3", title: "Portrait Set", src: "/assets/about-1.jpg" },
+      { id: "p-1", title: "Editorial Series", src: SECTION_DEFAULT_IMAGE_SRC.homePortfolio[0] },
+      { id: "p-2", title: "Landscape Study", src: SECTION_DEFAULT_IMAGE_SRC.homePortfolio[1] },
+      { id: "p-3", title: "Portrait Set", src: SECTION_DEFAULT_IMAGE_SRC.homePortfolio[2] },
     ],
     gallery: [
       {
         key: "portraits",
         title: "Portraits",
         images: [
-          { id: "portrait-1", src: "/assets/about-1.jpg", alt: "Portrait 1" },
-          { id: "portrait-2", src: "/assets/about-1.jpg", alt: "Portrait 2" },
-          { id: "portrait-3", src: "/assets/about-1.jpg", alt: "Portrait 3" },
+          { id: "portrait-1", src: SECTION_DEFAULT_IMAGE_SRC.galleryPortrait[0], alt: "Portrait 1" },
+          { id: "portrait-2", src: SECTION_DEFAULT_IMAGE_SRC.galleryPortrait[1], alt: "Portrait 2" },
+          { id: "portrait-3", src: SECTION_DEFAULT_IMAGE_SRC.galleryPortrait[2], alt: "Portrait 3" },
         ],
       },
       {
         key: "wedding",
         title: "Wedding",
         images: [
-          { id: "wedding-1", src: "/assets/about-1.jpg", alt: "Wedding 1" },
-          { id: "wedding-2", src: "/assets/about-1.jpg", alt: "Wedding 2" },
-          { id: "wedding-3", src: "/assets/about-1.jpg", alt: "Wedding 3" },
+          { id: "wedding-1", src: SECTION_DEFAULT_IMAGE_SRC.galleryWedding[0], alt: "Wedding 1" },
+          { id: "wedding-2", src: SECTION_DEFAULT_IMAGE_SRC.galleryWedding[1], alt: "Wedding 2" },
+          { id: "wedding-3", src: SECTION_DEFAULT_IMAGE_SRC.galleryWedding[2], alt: "Wedding 3" },
         ],
       },
       {
         key: "branding",
         title: "Branding",
         images: [
-          { id: "branding-1", src: "/assets/about-1.jpg", alt: "Branding 1" },
-          { id: "branding-2", src: "/assets/about-1.jpg", alt: "Branding 2" },
-          { id: "branding-3", src: "/assets/about-1.jpg", alt: "Branding 3" },
+          { id: "branding-1", src: SECTION_DEFAULT_IMAGE_SRC.galleryBranding[0], alt: "Branding 1" },
+          { id: "branding-2", src: SECTION_DEFAULT_IMAGE_SRC.galleryBranding[1], alt: "Branding 2" },
+          { id: "branding-3", src: SECTION_DEFAULT_IMAGE_SRC.galleryBranding[2], alt: "Branding 3" },
         ],
       },
     ],
-    clientLoginBackground: "/assets/about-1.jpg",
+    clientLoginBackground: SECTION_DEFAULT_IMAGE_SRC.clientLoginBackground,
     clients: [
       {
         id: "client-sample",
@@ -290,11 +325,8 @@ export function getDefaultContent(): AdminPageContent {
         username: "client-a",
         password: "password123",
         galleryTitle: "Sample Client Gallery",
-        coverImage: "/assets/about-1.jpg",
-        images: [
-          { id: "client-1", src: "/assets/about-1.jpg", alt: "Client sample 1" },
-          { id: "client-2", src: "/assets/about-1.jpg", alt: "Client sample 2" },
-        ],
+        coverImage: DEFAULT_CLIENT_COVER_IMAGE,
+        images: [],
       },
     ],
     services: [
@@ -385,7 +417,7 @@ export function loadContent(): AdminPageContent {
         coverImage:
           (client as Partial<AdminClient>).coverImage ||
           base.clients[index]?.coverImage ||
-          "/assets/about-1.jpg",
+          DEFAULT_CLIENT_COVER_IMAGE,
       })) ?? base.clients;
     const authClients = readClientAuthSnapshot();
 
@@ -448,7 +480,7 @@ export async function fetchContent(): Promise<AdminPageContent> {
         coverImage:
           (client as Partial<AdminClient>).coverImage ||
           base.clients[index]?.coverImage ||
-          "/assets/about-1.jpg",
+          DEFAULT_CLIENT_COVER_IMAGE,
       })) ?? base.clients;
 
     const normalized: AdminPageContent = {

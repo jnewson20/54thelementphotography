@@ -2,12 +2,22 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { fetchContent, getDefaultContent, saveClientAuthSnapshot, saveContent, type AdminClient, type AdminImage, type AdminPageContent, type AdminPortfolioItem, type AdminServiceGroup } from "./content";
+import { DEFAULT_CLIENT_COVER_IMAGE, SECTION_DEFAULT_IMAGE_SRC, fetchContent, getDefaultContent, saveClientAuthSnapshot, saveContent, type AdminClient, type AdminImage, type AdminPageContent, type AdminPortfolioItem, type AdminServiceGroup } from "./content";
 import { clearAdminAuthentication, clearTemporaryAdminPassword, consumeTemporaryAdminPassword, isAdminAuthenticated, saveTemporaryAdminPassword, setAdminAuthenticated } from "../lib/auth";
 import { toMediaSrc } from "../lib/media";
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "admin123";
+
+type UploadSection =
+  | "hero"
+  | "home-portfolio"
+  | "gallery-portrait"
+  | "gallery-wedding"
+  | "gallery-branding"
+  | "client-login"
+  | "client-cover"
+  | "client-gallery";
 
 function createId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
@@ -21,13 +31,10 @@ function moveItem<T>(items: T[], from: number, to: number): T[] {
   return next;
 }
 
-async function uploadImageFile(file: File) {
-  return uploadImageFileWithProgress(file);
-}
-
-async function uploadImageFileWithProgress(file: File, onProgress?: (loaded: number, total: number) => void) {
+async function uploadImageFileWithProgress(file: File, section: UploadSection, onProgress?: (loaded: number, total: number) => void) {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("section", section);
 
   return new Promise<{ src: string; warning?: string }>((resolve, reject) => {
     const request = new XMLHttpRequest();
@@ -84,7 +91,9 @@ function formatEta(seconds: number) {
 }
 
 function isManagedUploadPath(src?: string) {
-  return Boolean(src && src.startsWith("/uploads/"));
+  if (!src) return false;
+
+  return src.startsWith("/assets/") || src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/uploads/");
 }
 
 async function deleteManagedImage(src: string) {
@@ -103,6 +112,29 @@ function removeManagedImages(sources: Array<string | undefined>) {
       void deleteManagedImage(source);
     }
   });
+}
+
+type SectionUploadSummary = {
+  key: string;
+  label: string;
+  loaded: number;
+  total: number;
+  uploads: number;
+  updatedAt: number;
+};
+
+function resolveGallerySection(groupKey: string): UploadSection {
+  const normalized = groupKey.trim().toLowerCase();
+  if (normalized.includes("portrait")) return "gallery-portrait";
+  if (normalized.includes("wedding")) return "gallery-wedding";
+  return "gallery-branding";
+}
+
+function defaultGallerySrcForGroup(groupKey: string) {
+  const section = resolveGallerySection(groupKey);
+  if (section === "gallery-portrait") return SECTION_DEFAULT_IMAGE_SRC.galleryPortrait[0];
+  if (section === "gallery-wedding") return SECTION_DEFAULT_IMAGE_SRC.galleryWedding[0];
+  return SECTION_DEFAULT_IMAGE_SRC.galleryBranding[0];
 }
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -173,12 +205,17 @@ export default function AdminPage() {
   const [selectedGalleryImageIds, setSelectedGalleryImageIds] = useState<Record<string, Record<string, boolean>>>({});
   const [selectedClientImageIds, setSelectedClientImageIds] = useState<Record<string, Record<string, boolean>>>({});
   const [uploadProgress, setUploadProgress] = useState<{ label: string; loaded: number; total: number; startedAt: number; speedBps: number; etaSeconds: number | null } | null>(null);
+  const [sectionProgress, setSectionProgress] = useState<Record<string, SectionUploadSummary>>({});
+  const [showProgressPanel, setShowProgressPanel] = useState(false);
+  const [fadeProgressPanel, setFadeProgressPanel] = useState(false);
   const [uploadElapsedMs, setUploadElapsedMs] = useState(0);
   const uploadStatRef = useRef<{ lastLoaded: number; lastAt: number; speedBps: number }>({
     lastLoaded: 0,
     lastAt: 0,
     speedBps: 0,
   });
+  const progressFadeTimeoutRef = useRef<number | null>(null);
+  const progressHideTimeoutRef = useRef<number | null>(null);
   const hasHydratedContent = useRef(false);
 
   useEffect(() => {
@@ -215,6 +252,52 @@ export default function AdminPage() {
     const interval = window.setInterval(tick, 200);
     return () => window.clearInterval(interval);
   }, [uploadProgress]);
+
+  useEffect(() => {
+    const hasSectionProgress = Object.keys(sectionProgress).length > 0;
+
+    if (uploadProgress || hasSectionProgress) {
+      if (progressFadeTimeoutRef.current) {
+        window.clearTimeout(progressFadeTimeoutRef.current);
+        progressFadeTimeoutRef.current = null;
+      }
+      if (progressHideTimeoutRef.current) {
+        window.clearTimeout(progressHideTimeoutRef.current);
+        progressHideTimeoutRef.current = null;
+      }
+      setShowProgressPanel(true);
+      setFadeProgressPanel(false);
+    }
+
+    if (!uploadProgress && hasSectionProgress) {
+      const allComplete = Object.values(sectionProgress).every((entry) => entry.total > 0 && entry.loaded >= entry.total);
+
+      if (allComplete && !progressFadeTimeoutRef.current && !progressHideTimeoutRef.current) {
+        progressFadeTimeoutRef.current = window.setTimeout(() => {
+          setFadeProgressPanel(true);
+          progressFadeTimeoutRef.current = null;
+
+          progressHideTimeoutRef.current = window.setTimeout(() => {
+            setShowProgressPanel(false);
+            setFadeProgressPanel(false);
+            setSectionProgress({});
+            progressHideTimeoutRef.current = null;
+          }, 420);
+        }, 320);
+      }
+    }
+  }, [uploadProgress, sectionProgress]);
+
+  useEffect(() => {
+    return () => {
+      if (progressFadeTimeoutRef.current) {
+        window.clearTimeout(progressFadeTimeoutRef.current);
+      }
+      if (progressHideTimeoutRef.current) {
+        window.clearTimeout(progressHideTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
@@ -285,6 +368,94 @@ export default function AdminPage() {
   };
   const updateServices = (next: AdminServiceGroup[]) => {
     setContent((current) => ({ ...current, services: next }));
+  };
+
+  const beginSectionProgress = (sectionKey: string, label: string, bytesToAdd: number) => {
+    const existing = sectionProgress[sectionKey];
+    const baseLoaded = existing?.loaded ?? 0;
+    const baseTotal = existing?.total ?? 0;
+    const nextTotal = baseTotal + Math.max(0, bytesToAdd);
+
+    setSectionProgress((current) => ({
+      ...current,
+      [sectionKey]: {
+        key: sectionKey,
+        label,
+        loaded: baseLoaded,
+        total: nextTotal,
+        uploads: current[sectionKey]?.uploads ?? 0,
+        updatedAt: Date.now(),
+      },
+    }));
+
+    return { baseLoaded, nextTotal };
+  };
+
+  const updateSectionProgress = (sectionKey: string, label: string, loaded: number, total: number) => {
+    setSectionProgress((current) => {
+      const existing = current[sectionKey];
+      return {
+        ...current,
+        [sectionKey]: {
+          key: sectionKey,
+          label,
+          loaded: Math.max(existing?.loaded ?? 0, Math.min(loaded, total)),
+          total,
+          uploads: existing?.uploads ?? 0,
+          updatedAt: Date.now(),
+        },
+      };
+    });
+  };
+
+  const finishSectionProgress = (sectionKey: string, label: string, loaded: number, total: number, uploadsCompleted = 1) => {
+    setSectionProgress((current) => {
+      const existing = current[sectionKey];
+      return {
+        ...current,
+        [sectionKey]: {
+          key: sectionKey,
+          label,
+          loaded: Math.max(existing?.loaded ?? 0, Math.min(loaded, total)),
+          total,
+          uploads: (existing?.uploads ?? 0) + uploadsCompleted,
+          updatedAt: Date.now(),
+        },
+      };
+    });
+  };
+
+  const getUploadMeta = (target: "carousel" | "portfolio" | "gallery" | "background" | "client" | "client-cover" | "service", groupIndex?: number, clientIndex?: number) => {
+    if (target === "carousel") return { apiSection: "hero" as UploadSection, progressKey: "hero", label: "Main page carousel" };
+    if (target === "portfolio") return { apiSection: "home-portfolio" as UploadSection, progressKey: "home-portfolio", label: "Homepage portfolio cards" };
+    if (target === "background") return { apiSection: "client-login" as UploadSection, progressKey: "client-login", label: "Client login background" };
+    if (target === "client-cover") {
+      const client = content.clients[clientIndex ?? 0];
+      return {
+        apiSection: "client-cover" as UploadSection,
+        progressKey: `client-cover-${client?.id || "default"}`,
+        label: `Client cover${client?.name ? `: ${client.name}` : ""}`,
+      };
+    }
+    if (target === "gallery") {
+      const group = content.gallery[groupIndex ?? 0];
+      const apiSection = resolveGallerySection(group?.key || "branding");
+      return {
+        apiSection,
+        progressKey: `gallery-${group?.key || "branding"}`,
+        label: `Gallery: ${group?.title || "Category"}`,
+      };
+    }
+    if (target === "client") {
+      const client = content.clients[clientIndex ?? 0];
+      return {
+        apiSection: "client-gallery" as UploadSection,
+        progressKey: `client-gallery-${client?.id || "default"}`,
+        label: `Client gallery${client?.name ? `: ${client.name}` : ""}`,
+      };
+    }
+
+    return { apiSection: "home-portfolio" as UploadSection, progressKey: "other", label: "Uploads" };
   };
 
   const moveCarouselSlide = (from: number, to: number) => {
@@ -458,7 +629,7 @@ export default function AdminPage() {
 
   const resetClientLoginBackground = () => {
     removeManagedImages([content.clientLoginBackground]);
-    setContent((current) => ({ ...current, clientLoginBackground: "/assets/about-1.jpg" }));
+    setContent((current) => ({ ...current, clientLoginBackground: SECTION_DEFAULT_IMAGE_SRC.clientLoginBackground }));
   };
 
   const resetClientCoverImage = (clientIndex: number) => {
@@ -466,25 +637,25 @@ export default function AdminPage() {
     const next = [...content.clients];
     next[clientIndex] = {
       ...next[clientIndex],
-      coverImage: "/assets/about-1.jpg",
+      coverImage: DEFAULT_CLIENT_COVER_IMAGE,
     };
     updateClients(next);
   };
 
   const addCarouselSlide = () => {
-    updateHomeCarousel([...content.homeCarousel, { id: createId("carousel"), src: "/assets/about-1.jpg", alt: "New slide" }]);
+    updateHomeCarousel([...content.homeCarousel, { id: createId("carousel"), src: SECTION_DEFAULT_IMAGE_SRC.hero[0], alt: "New slide" }]);
   };
 
   const addPortfolioItem = () => {
     if (content.homePortfolio.length >= 3) return;
-    updatePortfolio([...content.homePortfolio, { id: createId("portfolio"), title: "New portfolio item", src: "/assets/about-1.jpg" }]);
+    updatePortfolio([...content.homePortfolio, { id: createId("portfolio"), title: "New portfolio item", src: SECTION_DEFAULT_IMAGE_SRC.homePortfolio[0] }]);
   };
 
   const addGalleryImage = (groupIndex: number) => {
     const next = [...content.gallery];
     next[groupIndex] = {
       ...next[groupIndex],
-      images: [...next[groupIndex].images, { id: createId("gallery"), src: "/assets/about-1.jpg", alt: "New image" }],
+      images: [...next[groupIndex].images, { id: createId("gallery"), src: defaultGallerySrcForGroup(next[groupIndex].key), alt: "New image" }],
     };
     updateGallery(next);
   };
@@ -498,7 +669,7 @@ export default function AdminPage() {
         username: `client-${Math.random().toString(36).slice(2, 6)}`,
         password: "change-me",
         galleryTitle: "Client Gallery",
-        coverImage: "/assets/about-1.jpg",
+        coverImage: DEFAULT_CLIENT_COVER_IMAGE,
         images: [],
       },
     ]);
@@ -508,7 +679,7 @@ export default function AdminPage() {
     const next = [...content.clients];
     next[clientIndex] = {
       ...next[clientIndex],
-      images: [...next[clientIndex].images, { id: createId("client-image"), src: "/assets/about-1.jpg", alt: "New client image" }],
+      images: [...next[clientIndex].images, { id: createId("client-image"), src: "", alt: "New client image" }],
     };
     updateClients(next);
   };
@@ -518,14 +689,16 @@ export default function AdminPage() {
     try {
       const items = Array.from(files);
       const totalBytes = items.reduce((sum, file) => sum + file.size, 0);
+      const uploadMeta = getUploadMeta("client", undefined, clientIndex);
+      const section = beginSectionProgress(uploadMeta.progressKey, uploadMeta.label, totalBytes);
       const startedAt = Date.now();
       uploadStatRef.current = { lastLoaded: 0, lastAt: startedAt, speedBps: 0 };
-      setUploadProgress({ label: `Uploading ${items.length} images...`, loaded: 0, total: totalBytes, startedAt, speedBps: 0, etaSeconds: null });
+      setUploadProgress({ label: `${uploadMeta.label}: uploading ${items.length} image${items.length === 1 ? "" : "s"}...`, loaded: 0, total: totalBytes, startedAt, speedBps: 0, etaSeconds: null });
 
       const uploads: Array<{ src: string; warning?: string }> = [];
       let completedBytes = 0;
       for (const file of items) {
-        const result = await uploadImageFileWithProgress(file, (loaded, total) => {
+        const result = await uploadImageFileWithProgress(file, uploadMeta.apiSection, (loaded, total) => {
           setUploadProgress((current) => {
             if (!current) return current;
             const nextLoaded = Math.min(totalBytes, completedBytes + Math.min(loaded, total || file.size));
@@ -546,6 +719,13 @@ export default function AdminPage() {
               etaSeconds: smoothedBps > 0 ? remaining / smoothedBps : null,
             };
           });
+
+          updateSectionProgress(
+            uploadMeta.progressKey,
+            uploadMeta.label,
+            section.baseLoaded + Math.min(totalBytes, completedBytes + Math.min(loaded, total || file.size)),
+            section.nextTotal
+          );
         });
         uploads.push(result);
         completedBytes += file.size;
@@ -562,7 +742,16 @@ export default function AdminPage() {
             etaSeconds: speed > 0 ? remaining / speed : null,
           };
         });
+
+        updateSectionProgress(
+          uploadMeta.progressKey,
+          uploadMeta.label,
+          section.baseLoaded + Math.min(totalBytes, completedBytes),
+          section.nextTotal
+        );
       }
+
+      finishSectionProgress(uploadMeta.progressKey, uploadMeta.label, section.baseLoaded + totalBytes, section.nextTotal, items.length);
 
       const firstWarning = uploads.find((entry) => entry.warning)?.warning;
       if (firstWarning) {
@@ -634,11 +823,14 @@ export default function AdminPage() {
   };
 
   const handleUpload = async (file: File, target: "carousel" | "portfolio" | "gallery" | "background" | "client" | "client-cover" | "service", index?: number, groupIndex?: number, packageIndex?: number, clientIndex?: number) => {
+    const uploadMeta = getUploadMeta(target, groupIndex, clientIndex);
+    const section = beginSectionProgress(uploadMeta.progressKey, uploadMeta.label, file.size);
+
     try {
       const startedAt = Date.now();
       uploadStatRef.current = { lastLoaded: 0, lastAt: startedAt, speedBps: 0 };
-      setUploadProgress({ label: "Uploading image...", loaded: 0, total: file.size, startedAt, speedBps: 0, etaSeconds: null });
-      const uploaded = await uploadImageFileWithProgress(file, (loaded, total) => {
+      setUploadProgress({ label: `${uploadMeta.label}: uploading image...`, loaded: 0, total: file.size, startedAt, speedBps: 0, etaSeconds: null });
+      const uploaded = await uploadImageFileWithProgress(file, uploadMeta.apiSection, (loaded, total) => {
         setUploadProgress((current) => {
           if (!current) return current;
           const nextLoaded = Math.min(loaded, total || file.size);
@@ -660,7 +852,17 @@ export default function AdminPage() {
             etaSeconds: smoothedBps > 0 ? remaining / smoothedBps : null,
           };
         });
+
+        updateSectionProgress(
+          uploadMeta.progressKey,
+          uploadMeta.label,
+          section.baseLoaded + Math.min(loaded, total || file.size),
+          section.nextTotal
+        );
       });
+
+      finishSectionProgress(uploadMeta.progressKey, uploadMeta.label, section.baseLoaded + file.size, section.nextTotal, 1);
+
       if (uploaded.warning) {
         setMessage(uploaded.warning);
       }
@@ -791,32 +993,57 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f1e4] px-4 py-10 text-[#071018]">
-      {uploadProgress && (
-        <div className="fixed bottom-5 right-5 z-50 w-full max-w-sm rounded-2xl border border-[#071018]/10 bg-white/95 p-4 shadow-xl backdrop-blur">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-[#071018]">{uploadProgress.label}</p>
-            <p className="text-xs font-medium text-[#4d5561]">
-              {uploadProgress.total > 0
-                ? `${Math.min(100, Math.round((uploadProgress.loaded / uploadProgress.total) * 100))}%`
-                : "0%"}
-            </p>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#d8cbb1]/40">
-            <div
-              className="h-full rounded-full bg-[#071018] transition-all"
-              style={{
-                width: `${uploadProgress.total > 0 ? Math.min(100, Math.round((uploadProgress.loaded / uploadProgress.total) * 100)) : 0}%`,
-              }}
-            />
-          </div>
-          <p className="mt-2 text-xs text-[#4d5561]">
-            {formatBytes(uploadProgress.loaded)} / {formatBytes(uploadProgress.total)} · {(uploadElapsedMs / 1000).toFixed(1)}s
-          </p>
-          <p className="mt-1 text-xs text-[#4d5561]">
-            {uploadProgress.speedBps > 0 ? `${formatBytes(uploadProgress.speedBps)}/s` : "Calculating speed..."}
-            {" · ETA "}
-            {uploadProgress.etaSeconds === null ? "--" : formatEta(uploadProgress.etaSeconds)}
-          </p>
+      {showProgressPanel && (
+        <div className={`fixed bottom-5 right-5 z-50 w-full max-w-sm rounded-2xl border border-[#071018]/10 bg-white/95 p-4 shadow-xl backdrop-blur transition-opacity duration-400 ${fadeProgressPanel ? "opacity-0" : "opacity-100"}`}>
+          {uploadProgress && (
+            <>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-[#071018]">{uploadProgress.label}</p>
+                <p className="text-xs font-medium text-[#4d5561]">
+                  {uploadProgress.total > 0
+                    ? `${Math.min(100, Math.round((uploadProgress.loaded / uploadProgress.total) * 100))}%`
+                    : "0%"}
+                </p>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#d8cbb1]/40">
+                <div
+                  className="h-full rounded-full bg-[#071018] transition-all"
+                  style={{
+                    width: `${uploadProgress.total > 0 ? Math.min(100, Math.round((uploadProgress.loaded / uploadProgress.total) * 100)) : 0}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-[#4d5561]">
+                {formatBytes(uploadProgress.loaded)} / {formatBytes(uploadProgress.total)} · {(uploadElapsedMs / 1000).toFixed(1)}s
+              </p>
+              <p className="mt-1 text-xs text-[#4d5561]">
+                {uploadProgress.speedBps > 0 ? `${formatBytes(uploadProgress.speedBps)}/s` : "Calculating speed..."}
+                {" · ETA "}
+                {uploadProgress.etaSeconds === null ? "--" : formatEta(uploadProgress.etaSeconds)}
+              </p>
+            </>
+          )}
+
+          {Object.values(sectionProgress)
+            .sort((a, b) => b.updatedAt - a.updatedAt)
+            .slice(0, 6)
+            .map((entry) => {
+              const percent = entry.total > 0 ? Math.min(100, Math.round((entry.loaded / entry.total) * 100)) : 0;
+              return (
+                <div key={entry.key} className="mt-3 border-t border-[#d8cbb1]/35 pt-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-[#071018]">{entry.label}</p>
+                    <p className="text-[11px] text-[#4d5561]">{percent}%</p>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#d8cbb1]/40">
+                    <div className="h-full rounded-full bg-[#9b7746] transition-all" style={{ width: `${percent}%` }} />
+                  </div>
+                  <p className="mt-1 text-[11px] text-[#4d5561]">
+                    {formatBytes(entry.loaded)} / {formatBytes(entry.total)} · {entry.uploads} upload{entry.uploads === 1 ? "" : "s"}
+                  </p>
+                </div>
+              );
+            })}
         </div>
       )}
       {showSaveToast && (
@@ -1026,7 +1253,7 @@ export default function AdminPage() {
                 <div className="mt-4 rounded-2xl border border-[#d8cbb1]/40 bg-white/70 p-4">
                   <p className="text-sm font-medium text-[#4d5561]">Client cover image</p>
                   <div className="mt-2 overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#071018]">
-                    <PreviewImage src={client.coverImage || "/assets/about-1.jpg"} alt={`${client.name} cover`} width={1200} height={400} className="h-40 w-full object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                    <PreviewImage src={client.coverImage || DEFAULT_CLIENT_COVER_IMAGE} alt={`${client.name} cover`} width={1200} height={400} className="h-40 w-full object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
                   </div>
                   <label className="mt-3 block text-sm text-[#4d5561]">
                     Upload cover image

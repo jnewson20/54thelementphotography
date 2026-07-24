@@ -1,0 +1,262 @@
+{
+  "homeCarousel": [
+    {
+      "id": "hero-2",
+      "src": "/assets/hero/Newson%20Fam-33.jpg",
+      "alt": "Hero 2"
+    },
+    {
+      "id": "hero-1",
+      "src": "/assets/hero/Kordaja%20Maternity-2.jpg",
+      "alt": "Hero 1"
+    },
+    {
+      "id": "hero-3",
+      "src": "/assets/hero/Noah-4.jpg",
+      "alt": "Hero 3"
+    },
+    {
+      "id": "carousel-k5cs0m",
+      "src": "/assets/hero/1784905852222-cdf0f6cc8d7b1193.jpg",
+      "alt": "New slide"
+    }
+  ],
+  "homePortfolio": [
+    {
+      "id": "p-1",
+      "title": "Editorial Series",
+      "src": "/assets/home%20portfolio/Korea%20Southaven-09.jpg"
+    },
+    {
+      "id": "p-2",
+      "title": "Landscape Study",
+      "src": "/assets/home%20portfolio/Kyla%20%20Mocha-26.jpg"
+    },
+    {
+      "id": "p-3",
+      "title": "Portrait Set",
+      "src": "/assets/home%20portfolio/Newson%20Fam-43.jpg"
+    }
+  ],
+  "gallery": [
+    {
+      "key": "portraits",
+      "title": "Portraits",
+      "images": [
+        {
+          "id": "portrait-1",
+          "src": "/assets/gallery/portrait/JQ-38.jpg",
+          "alt": "Portrait 1"
+        },
+        {
+          "id": "portrait-2",
+          "src": "/assets/gallery/portrait/JQ-6.jpg",
+          "alt": "Portrait 2"
+        },
+        {
+          "id": "portrait-3",
+          "src": "/assets/gallery/portrait/Kordaja%20Maternity-2.jpg",
+          "alt": "Portrait 3"
+        }
+      ]
+    },
+    {
+      "key": "wedding",
+      "title": "Wedding",
+      "images": [
+        {
+          "id": "wedding-1",
+          "src": "/assets/gallery/wedding/JQ%20Finals-9.jpg",
+          "alt": "Wedding 1"
+        },
+        {
+          "id": "wedding-2",
+          "src": "/assets/gallery/wedding/The%20Walker's-124.jpg",
+          "alt": "Wedding 2"
+        },
+        {
+          "id": "wedding-3",
+          "src": "/assets/gallery/wedding/The%20Walker's-346.jpg",
+          "alt": "Wedding 3"
+        }
+      ]
+    },
+    {
+      "key": "branding",
+      "title": "Branding",
+      "images": [
+        {
+          "id": "branding-1",
+          "src": "/assets/gallery/branding%3Amedia/Du-16.jpg",
+          "alt": "Branding 1"
+        },
+        {
+          "id": "branding-2",
+          "src": "/assets/gallery/branding%3Amedia/Du-22.jpg",
+          "alt": "Branding 2"
+        },
+        {
+          "id": "branding-3",
+          "src": "/assets/gallery/branding%3Amedia/MSB-107.jpg",
+          "alt": "Branding 3"
+        }
+      ]
+    }
+  ],
+  "clientLoginBackground": "/assets/client%20login/Newson%20Fam-1%20copy.jpg",
+  "clients": [
+    {
+      "id": "client-sample",
+      "name": "Korea",
+      "username": "Korea",
+      "password": "Cowboys20",
+      "galleryTitle": "Newsons",
+      "coverImage": "/assets/client%20login/1784905944029-77e4f6092c5d9791.jpg",
+      "images": [
+        {
+          "id": "client-image-0-tt202y",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906028771-81e064fce9ba091c.jpg",
+          "alt": "Client image 1"
+        },
+        {
+          "id": "client-image-1-dusohj",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906030277-108933a8a63e1403.jpg",
+          "alt": "Client image 2"
+        },
+        {
+          "id": "client-image-2-99y5uz",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906032045-74d8d189a5204d32.jpg",
+          "alt": "Client image 3"
+        },
+        {
+          "id": "client-image-3-5hzhn7",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906033659-4cd01561b8e29e24.jpg",
+          "alt": "Client image 4"
+        },
+        {
+          "id": "client-image-4-re7zk8",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906041813-466577c4f39c8749.jpg",
+          "alt": "Client image 5"
+        },
+        {
+          "id": "client-image-5-vn06db",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906043505-8fc6bf9930670aaa.jpg",
+          "alt": "Client image 6"
+        },
+        {
+          "id": "client-image-0-0hpgom",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906268737-a3a907b872b6aeb3.jpg",
+          "alt": "Client image 7"
+        },
+        {
+          "id": "client-image-1-fkm8g4",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906270181-addd8a599d77252e.jpg",
+          "alt": "Client image 8"
+        },
+        {
+          "id": "client-image-2-isftdm",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906278387-617bc149925ed2c0.jpg",
+          "alt": "Client image 9"
+        },
+        {
+          "id": "client-image-3-z4didy",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906288250-865b173bf292f500.jpg",
+          "alt": "Client image 10"
+        },
+        {
+          "id": "client-image-4-8iweyl",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906289481-bfbf8ead9fcb83c7.jpg",
+          "alt": "Client image 11"
+        }
+      ]
+    }
+  ],
+  "services": [
+    {
+      "key": "portraits",
+      "title": "Portraits",
+      "description": "Studio and environmental portrait sessions tailored to your style.",
+      "packages": [
+        {
+          "id": "portrait-basic",
+          "title": "Express",
+          "price": "$150",
+          "duration": "30 min",
+          "bullets": [
+            "1 location",
+            "5 edited images",
+            "Online gallery"
+          ],
+          "note": "",
+          "primaryButtonText": "Book",
+          "primaryButtonHref": "https://54thelementphotography.pixieset.com/booking/",
+          "secondaryButtonText": "Inquire",
+          "secondaryButtonHref": "/#contact"
+        },
+        {
+          "id": "portrait-plus",
+          "title": "Leather",
+          "price": "$250",
+          "duration": "60 min",
+          "bullets": [
+            "2 locations",
+            "15 edited images",
+            "Print release",
+            "Styling advice"
+          ],
+          "note": "",
+          "primaryButtonText": "Book",
+          "primaryButtonHref": "https://54thelementphotography.pixieset.com/booking/",
+          "secondaryButtonText": "Inquire",
+          "secondaryButtonHref": "/#contact"
+        }
+      ]
+    },
+    {
+      "key": "wedding",
+      "title": "Wedding",
+      "description": "Coverage and storytelling for your full wedding day or intimate elopements.",
+      "packages": [
+        {
+          "id": "wedding-elopement",
+          "title": "Elopement",
+          "price": "$1,200",
+          "duration": "Up to 4 hours",
+          "bullets": [
+            "Full coverage of ceremony & portraits",
+            "200+ images (edited)",
+            "Online gallery"
+          ],
+          "note": "",
+          "primaryButtonText": "Book",
+          "primaryButtonHref": "https://54thelementphotography.pixieset.com/booking/",
+          "secondaryButtonText": "Inquire",
+          "secondaryButtonHref": "/#contact"
+        }
+      ]
+    },
+    {
+      "key": "branding",
+      "title": "Branding",
+      "description": "Creative brand sessions for founders, products, and campaigns.",
+      "packages": [
+        {
+          "id": "branding-starter",
+          "title": "Starter",
+          "price": "$600",
+          "duration": "1 hour",
+          "bullets": [
+            "10 styled images",
+            "1 background",
+            "Commercial usage"
+          ],
+          "note": "",
+          "primaryButtonText": "Book",
+          "primaryButtonHref": "https://54thelementphotography.pixieset.com/booking/",
+          "secondaryButtonText": "Inquire",
+          "secondaryButtonHref": "/#contact"
+        }
+      ]
+    }
+  ]
+}
