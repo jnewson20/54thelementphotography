@@ -7,7 +7,15 @@ type Slide = { src: string | StaticImageData; alt?: string };
 
 export default function Carousel({ slides = [], interval = 5000 }: { slides: Slide[]; interval?: number }) {
   const [index, setIndex] = useState(0);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [activeVisible, setActiveVisible] = useState(true);
+  const [previousVisible, setPreviousVisible] = useState(false);
   const timer = useRef<number | null>(null);
+  const indexRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const transitionTimeoutRef = useRef<number | null>(null);
+  const activeSlide = slides[index];
 
   useEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -16,26 +24,83 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
     return () => { if (timer.current) window.clearInterval(timer.current); };
   }, [slides.length, interval]);
 
+  useEffect(() => {
+    const previous = indexRef.current;
+    if (previous === index) return;
+
+    indexRef.current = index;
+    setPrevIndex(previous);
+    setIsTransitioning(true);
+    setActiveVisible(false);
+    setPreviousVisible(true);
+
+    if (rafRef.current) {
+      window.cancelAnimationFrame(rafRef.current);
+    }
+    rafRef.current = window.requestAnimationFrame(() => {
+      setActiveVisible(true);
+      setPreviousVisible(false);
+      rafRef.current = null;
+    });
+
+    if (transitionTimeoutRef.current) {
+      window.clearTimeout(transitionTimeoutRef.current);
+    }
+    transitionTimeoutRef.current = window.setTimeout(() => {
+      setIsTransitioning(false);
+      setPrevIndex(null);
+      transitionTimeoutRef.current = null;
+    }, 760);
+  }, [index]);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+      if (transitionTimeoutRef.current) {
+        window.clearTimeout(transitionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="absolute inset-0 -z-10" aria-hidden >
-      {slides.map((s, i) => (
-        <div
-          key={i}
-          className={`absolute inset-0 slide ${i === index ? "opacity-80" : "opacity-0"}`}
-          role="img"
-          aria-label={s.alt || `slide-${i}`}
-        >
+      {isTransitioning && prevIndex !== null && slides[prevIndex] ? (
+        <div className={`absolute inset-0 transition-opacity duration-700 ease-out ${previousVisible ? "opacity-80" : "opacity-0"}`}>
           <Image
-            src={typeof s.src === "string" ? toMediaSrc(s.src) : s.src}
-            alt={s.alt || `slide-${i}`}
+            src={typeof slides[prevIndex].src === "string" ? toMediaSrc(slides[prevIndex].src) : slides[prevIndex].src}
+            alt={slides[prevIndex].alt || `slide-${prevIndex}`}
             fill
             className="object-cover"
-            priority={i === 0}
-            placeholder={typeof s.src === "object" ? "blur" : "empty"}
+            loading="lazy"
+            placeholder={typeof slides[prevIndex].src === "object" ? "blur" : "empty"}
             sizes="100vw"
+            quality={70}
           />
         </div>
-      ))}
+      ) : null}
+
+      {activeSlide ? (
+        <div
+          key={index}
+          className={`absolute inset-0 slide transition-opacity duration-700 ease-out ${activeVisible ? "opacity-80" : "opacity-0"}`}
+          role="img"
+          aria-label={activeSlide.alt || `slide-${index}`}
+        >
+          <Image
+            src={typeof activeSlide.src === "string" ? toMediaSrc(activeSlide.src) : activeSlide.src}
+            alt={activeSlide.alt || `slide-${index}`}
+            fill
+            className="object-cover"
+            priority={index === 0}
+            loading={index === 0 ? "eager" : "lazy"}
+            placeholder={typeof activeSlide.src === "object" ? "blur" : "empty"}
+            sizes="100vw"
+            quality={70}
+          />
+        </div>
+      ) : null}
       {/* overlay for contrast */}
       <div className="absolute inset-0 bg-black/80 -z-5 pointer-events-none" />
     </div>

@@ -13,7 +13,14 @@ export default function CategoryCarousel({
   interval?: number;
 }) {
   const [active, setActive] = useState(0);
+  const [prevActive, setPrevActive] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [activeVisible, setActiveVisible] = useState(true);
+  const [previousVisible, setPreviousVisible] = useState(false);
   const timer = useRef<number | null>(null);
+  const activeRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const transitionTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -25,35 +32,87 @@ export default function CategoryCarousel({
     };
   }, [interval, slides.length]);
 
+  useEffect(() => {
+    const previous = activeRef.current;
+    if (previous === active) return;
+
+    activeRef.current = active;
+    setPrevActive(previous);
+    setIsTransitioning(true);
+    setActiveVisible(false);
+    setPreviousVisible(true);
+
+    if (rafRef.current) {
+      window.cancelAnimationFrame(rafRef.current);
+    }
+    rafRef.current = window.requestAnimationFrame(() => {
+      setActiveVisible(true);
+      setPreviousVisible(false);
+      rafRef.current = null;
+    });
+
+    if (transitionTimeoutRef.current) {
+      window.clearTimeout(transitionTimeoutRef.current);
+    }
+    transitionTimeoutRef.current = window.setTimeout(() => {
+      setIsTransitioning(false);
+      setPrevActive(null);
+      transitionTimeoutRef.current = null;
+    }, 760);
+  }, [active]);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+      if (transitionTimeoutRef.current) {
+        window.clearTimeout(transitionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const goTo = (index: number) => setActive(index);
   const previous = () => setActive((current) => (current - 1 + slides.length) % slides.length);
   const next = () => setActive((current) => (current + 1) % slides.length);
+  const activeSlide = slides[active];
+  const activeSrc = typeof activeSlide?.src === "string" ? activeSlide.src : activeSlide?.src?.src;
+  const previousSlide = prevActive !== null ? slides[prevActive] : null;
+  const previousSrc = typeof previousSlide?.src === "string" ? previousSlide.src : previousSlide?.src?.src;
 
   return (
     <div className="flex items-center rounded-[4px]  bg-[#ffffff]">
       <div className="relative min-h-[320px] w-full sm:min-h-[420px] md:min-h-[520px]">
         <div className="absolute inset-0 drop-shadow-md shadow-black" aria-hidden="true">
-          {slides.map((slide, index) => {
-            const src = typeof slide.src === "string" ? slide.src : slide.src?.src;
-            return (
-              <div
-                key={`slide-${index}`}
-                className={`absolute inset-0 transition-opacity duration-1000 ease-out ${index === active ? "opacity-100" : "opacity-0"}`}
-              >
-                {src ? (
-                  <Image
-                    src={toMediaSrc(src)}
-                    alt={slide.alt || ""}
-                    fill
-                    className="w-full h-full object-cover"
-                    sizes="100vw"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-[#ffffff]" />
-                )}
-              </div>
-            );
-          })}
+          {isTransitioning && previousSrc ? (
+            <div className={`absolute inset-0 transition-opacity duration-700 ease-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
+              <Image
+                src={toMediaSrc(previousSrc)}
+                alt={previousSlide?.alt || ""}
+                fill
+                className="w-full h-full object-cover"
+                sizes="100vw"
+                loading="lazy"
+                quality={68}
+              />
+            </div>
+          ) : null}
+
+          <div key={`slide-${active}`} className={`absolute inset-0 transition-opacity duration-700 ease-out ${activeVisible ? "opacity-100" : "opacity-0"}`}>
+            {activeSrc ? (
+              <Image
+                src={toMediaSrc(activeSrc)}
+                alt={activeSlide?.alt || ""}
+                fill
+                className="w-full h-full object-cover"
+                sizes="100vw"
+                loading="lazy"
+                quality={68}
+              />
+            ) : (
+              <div className="w-full h-full bg-[#ffffff]" />
+            )}
+          </div>
         </div>
 
         <div className="absolute inset-0 bg-black/10" />

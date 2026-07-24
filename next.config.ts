@@ -36,6 +36,24 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/assets/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/api/admin/content",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=60, s-maxage=60, stale-while-revalidate=120",
+          },
+        ],
+      },
+      {
         source: "/api/media",
         headers: [
           {

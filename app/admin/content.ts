@@ -56,6 +56,11 @@ export type AdminPageContent = {
 const STORAGE_KEY = "54th-element-admin-content-v1";
 const CLIENT_AUTH_STORAGE_KEY = "54th-element-admin-client-auth-v1";
 const CONTENT_API_PATH = "/api/admin/content";
+const CONTENT_CACHE_TS_KEY = "54th-element-admin-content-cache-ts";
+const CONTENT_CACHE_TTL_MS = 120000;
+
+let memoryCachedContent: AdminPageContent | null = null;
+let memoryCachedAt = 0;
 
 function localAssetPath(...segments: string[]) {
   return `/assets/${segments.map((segment) => encodeURIComponent(segment)).join("/")}`;
@@ -454,18 +459,46 @@ export async function saveContent(content: AdminPageContent) {
   // Maintain local fallback copy for offline convenience.
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
+    window.localStorage.setItem(CONTENT_CACHE_TS_KEY, Date.now().toString());
   } catch {
     // Ignore local fallback failures.
   }
+
+  memoryCachedContent = content;
+  memoryCachedAt = Date.now();
 }
 
-export async function fetchContent(): Promise<AdminPageContent> {
+export async function fetchContent(options?: { fresh?: boolean }): Promise<AdminPageContent> {
   if (typeof window === "undefined") {
     return getDefaultContent();
   }
 
+  const requireFresh = options?.fresh === true;
+
+  if (!requireFresh) {
+    if (memoryCachedContent && Date.now() - memoryCachedAt < CONTENT_CACHE_TTL_MS) {
+      return memoryCachedContent;
+    }
+
+    try {
+      const cachedRaw = window.localStorage.getItem(STORAGE_KEY);
+      const cachedTsRaw = window.localStorage.getItem(CONTENT_CACHE_TS_KEY);
+      if (cachedRaw && cachedTsRaw) {
+        const cachedAt = Number(cachedTsRaw);
+        if (Number.isFinite(cachedAt) && Date.now() - cachedAt < CONTENT_CACHE_TTL_MS) {
+          const cachedParsed = JSON.parse(cachedRaw) as AdminPageContent;
+          memoryCachedContent = cachedParsed;
+          memoryCachedAt = cachedAt;
+          return cachedParsed;
+        }
+      }
+    } catch {
+      // Continue to network fetch when cache parse fails.
+    }
+  }
+
   try {
-    const response = await fetch(CONTENT_API_PATH, { cache: "no-store" });
+    const response = await fetch(CONTENT_API_PATH, { cache: requireFresh ? "no-store" : "default" });
     const payload = await response.json().catch(() => null);
 
     if (!response.ok || !payload?.content) {
@@ -494,9 +527,13 @@ export async function fetchContent(): Promise<AdminPageContent> {
 
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+      window.localStorage.setItem(CONTENT_CACHE_TS_KEY, Date.now().toString());
     } catch {
       // Ignore local cache failures.
     }
+
+    memoryCachedContent = normalized;
+    memoryCachedAt = Date.now();
 
     return normalized;
   } catch {

@@ -224,7 +224,7 @@ export default function AdminPage() {
     setLoggedIn(saved);
     setAuthChecked(true);
     void (async () => {
-      const loaded = await fetchContent();
+      const loaded = await fetchContent({ fresh: true });
       setContent(loaded);
       hasHydratedContent.current = true;
     })();
