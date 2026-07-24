@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchContent } from "../../admin/content";
@@ -48,7 +49,14 @@ export default function ClientLoginPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center">
       <div className="absolute inset-0" aria-hidden>
-        <img src={toMediaSrc(background)} alt="Client background" className="h-full w-full object-cover" loading="eager" decoding="async" fetchPriority="high" />
+        <Image
+          src={toMediaSrc(background)}
+          alt="Client background"
+          fill
+          className="h-full w-full object-cover"
+          priority
+          sizes="100vw"
+        />
       </div>
 
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" aria-hidden />

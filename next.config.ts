@@ -33,6 +33,19 @@ function getRemotePatterns() {
 const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/api/media",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3000, s-maxage=3000",
+          },
+        ],
+      },
+    ];
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 2678400,

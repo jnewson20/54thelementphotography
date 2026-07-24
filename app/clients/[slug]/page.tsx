@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
 import { useParams, useRouter } from "next/navigation";
@@ -103,7 +104,14 @@ export default function ClientPage() {
   return (
     <div className="min-h-screen pb-16">
       <div className="relative h-[280px] w-full overflow-hidden md:h-[360px]">
-        <img src={toMediaSrc(viewData.coverImage)} alt={`${viewData.client.name} cover`} className="h-full w-full object-cover" loading="eager" decoding="async" fetchPriority="high" />
+        <Image
+          src={toMediaSrc(viewData.coverImage)}
+          alt={`${viewData.client.name} cover`}
+          fill
+          className="h-full w-full object-cover"
+          priority
+          sizes="100vw"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/45" />
         <div className="absolute inset-0 flex items-center justify-center">
           <h1

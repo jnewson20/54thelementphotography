@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Layout from "../components/Layout";
 import Carousel from "../components/Carousel";
 import LazyContactForm from "../components/LazyContactForm";
@@ -99,7 +100,13 @@ export default function Home() {
                 <div key={p.id} data-reveal className="reveal group relative h-72 overflow-hidden rounded-[28px]" style={{ transitionDelay: `${index * 80}ms` }}>
                   <div className="card-photo h-full w-full">
                     {p.src ? (
-                      <img src={toMediaSrc(p.src)} alt={p.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                      <Image
+                        src={toMediaSrc(p.src)}
+                        alt={p.title}
+                        fill
+                        className="h-full w-full object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gray-200 text-xs text-gray-600">
                         No image
@@ -127,7 +134,13 @@ export default function Home() {
       <section id="about" className="container mt-12 mb-20 cv-auto">
         <div className="grid items-center gap-8 md:grid-cols-2">
           <div data-reveal className="reveal relative h-80 overflow-hidden rounded-[32px] bg-[#071018] shadow-[0_24px_60px_rgba(7,16,24,0.16)] md:h-[520px]">
-            <img src="/assets/about-1.jpg" alt="Photographer portrait" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+            <Image
+              src="/assets/about-1.jpg"
+              alt="Photographer portrait"
+              fill
+              className="h-full w-full object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
           </div>
 
           <div data-reveal className="reveal">
