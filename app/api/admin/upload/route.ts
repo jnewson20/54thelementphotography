@@ -18,12 +18,12 @@ type UploadSection =
 
 const LOCAL_SECTION_DIRS: Record<Exclude<UploadSection, "client-gallery">, string[]> = {
   hero: ["hero"],
-  "home-portfolio": ["home portfolio"],
+  "home-portfolio": ["home-portfolio"],
   "gallery-portrait": ["gallery", "portrait"],
   "gallery-wedding": ["gallery", "wedding"],
-  "gallery-branding": ["gallery", "branding:media"],
-  "client-login": ["client login"],
-  "client-cover": ["client login"],
+  "gallery-branding": ["gallery", "branding-media"],
+  "client-login": ["client-login"],
+  "client-cover": ["client-login"],
 };
 
 function extFromType(type: string) {
@@ -48,13 +48,38 @@ function toAssetSrc(filePath: string) {
   return `/${normalized.split("/").map((segment) => encodeURIComponent(segment)).join("/")}`;
 }
 
-async function saveToAssetSection(buffer: Buffer, mimeType: string, section: Exclude<UploadSection, "client-gallery">) {
+async function saveToAssetSection(buffer: Buffer, mimeType: string, section: Exclude<UploadSection, "client-gallery">, originalFileName?: string) {
   const destinationDir = path.join(ASSETS_DIR, ...LOCAL_SECTION_DIRS[section]);
   await fs.mkdir(destinationDir, { recursive: true });
 
-  const ext = extFromType(mimeType);
-  const fileName = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`;
-  const outputPath = path.join(destinationDir, fileName);
+  let fileName: string;
+  
+  if (originalFileName && originalFileName.trim()) {
+    fileName = originalFileName.trim();
+  } else {
+    const ext = extFromType(mimeType);
+    fileName = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`;
+  }
+
+  let outputPath = path.join(destinationDir, fileName);
+  
+  // Handle filename collisions by appending counter
+  let counter = 1;
+  const nameWithoutExt = path.parse(fileName).name;
+  const ext = path.parse(fileName).ext;
+  
+  while (counter < 1000) {
+    try {
+      await fs.access(outputPath);
+      // File exists, try next name
+      fileName = `${nameWithoutExt}-${counter}${ext}`;
+      outputPath = path.join(destinationDir, fileName);
+      counter++;
+    } catch {
+      // File does not exist, we can use this name
+      break;
+    }
+  }
 
   await fs.writeFile(outputPath, buffer);
 
@@ -114,7 +139,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const src = await saveToAssetSection(buffer, uploaded.type, typedSection);
+    const src = await saveToAssetSection(buffer, uploaded.type, typedSection, uploaded.name);
     return NextResponse.json({ src });
   } catch {
     return NextResponse.json({ error: "Unable to upload image." }, { status: 500 });
