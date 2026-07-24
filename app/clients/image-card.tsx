@@ -1,6 +1,7 @@
 // app/clients/image-card.tsx
 "use client";
 import Image from "next/image";
+import { toMediaSrc } from "../lib/media";
 
 type ImageCardProps = {
   src: string;
@@ -39,7 +40,7 @@ export default function ImageCard({ src, alt, selected = false, onSelect, onOpen
         aria-label="Open slideshow"
       >
         <Image
-          src={src}
+          src={toMediaSrc(src)}
           alt={alt || ""}
           fill
           unoptimized

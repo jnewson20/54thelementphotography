@@ -40,6 +40,12 @@ function extensionFromMimeType(mimeType: string) {
   return map[mimeType.toLowerCase()] || "bin";
 }
 
+function extensionFromPathname(pathname: string) {
+  const ext = path.extname(pathname).replace(".", "").toLowerCase();
+  if (!ext) return "bin";
+  return ext;
+}
+
 export async function POST(req: NextRequest) {
   const validation = validateMockSession(req);
   if (!validation.ok) {
@@ -104,6 +110,22 @@ export async function POST(req: NextRequest) {
 
       const extension = extensionFromMimeType(decoded.mimeType);
       zip.file(uniqueName(`client-image-${index + 1}.${extension}`), decoded.buffer);
+      continue;
+    }
+
+    if (file.startsWith("https://") || file.startsWith("http://")) {
+      const remoteResponse = await fetch(file);
+      if (!remoteResponse.ok) {
+        return NextResponse.json({ error: `file not found: ${file}` }, { status: 404 });
+      }
+
+      const bytes = Buffer.from(await remoteResponse.arrayBuffer());
+      const mimeType = remoteResponse.headers.get("content-type") || "application/octet-stream";
+      const url = new URL(file);
+      const ext = mimeType.startsWith("image/")
+        ? extensionFromMimeType(mimeType)
+        : extensionFromPathname(url.pathname);
+      zip.file(uniqueName(`client-image-${index + 1}.${ext}`), bytes);
       continue;
     }
 

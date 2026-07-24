@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { toMediaSrc } from "../app/lib/media";
 
 export default function Gallery({ items = [] }: { items: { id: string; title: string; thumb: string }[] }) {
   return (
@@ -7,7 +8,7 @@ export default function Gallery({ items = [] }: { items: { id: string; title: st
       {items.map((it) => (
         <Link className="relative overflow-hidden rounded-3xl group block" key={it.id} href={`/clients/login`}>
           <div className="relative h-full w-full transition-transform group-hover:scale-105">
-            <Image src={it.thumb} alt={it.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
+            <Image src={toMediaSrc(it.thumb)} alt={it.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 33vw" />
           </div>
           <div className="p-3">
             <div className="text-sm text-[#9aa6b2]">{it.title}</div>

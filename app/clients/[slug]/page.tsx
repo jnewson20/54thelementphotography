@@ -4,8 +4,9 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Cormorant_Garamond } from "next/font/google";
 import { useParams, useRouter } from "next/navigation";
-import { loadContent, type AdminClient } from "../../admin/content";
+import { fetchContent, type AdminClient } from "../../admin/content";
 import { clearClientSession, isClientSessionValid } from "../../lib/auth";
+import { toMediaSrc } from "../../lib/media";
 import ClientGallery from "../client-gallery";
 
 const luxuryHeading = Cormorant_Garamond({
@@ -58,18 +59,20 @@ export default function ClientPage() {
       return;
     }
 
-    const content = loadContent();
-    const client =
-      content.clients.find((entry) => normalizeSlugValue(entry.username) === normalizedSlug) ?? null;
+    void (async () => {
+      const content = await fetchContent();
+      const client =
+        content.clients.find((entry) => normalizeSlugValue(entry.username) === normalizedSlug) ?? null;
 
-    setViewData({
-      client,
-      title: client ? client.galleryTitle || client.name : "Private gallery",
-      images: client ? client.images.map((image) => image.src) : [],
-      coverImage: client?.coverImage || "/assets/client-bg.jpg",
-      note: client ? `Welcome ${client.name}. Access your private gallery below.` : undefined,
-    });
-    setCheckingAccess(false);
+      setViewData({
+        client,
+        title: client ? client.galleryTitle || client.name : "Private gallery",
+        images: client ? client.images.map((image) => image.src) : [],
+        coverImage: client?.coverImage || "/assets/client-bg.jpg",
+        note: client ? `Welcome ${client.name}. Access your private gallery below.` : undefined,
+      });
+      setCheckingAccess(false);
+    })();
   }, [normalizedSlug, rawSlug, router, slug]);
 
   const handleSignOut = () => {
@@ -100,7 +103,7 @@ export default function ClientPage() {
   return (
     <div className="min-h-screen pb-16">
       <div className="relative h-[280px] w-full overflow-hidden md:h-[360px]">
-        <img src={viewData.coverImage} alt={`${viewData.client.name} cover`} className="h-full w-full object-cover" loading="eager" decoding="async" fetchPriority="high" />
+        <img src={toMediaSrc(viewData.coverImage)} alt={`${viewData.client.name} cover`} className="h-full w-full object-cover" loading="eager" decoding="async" fetchPriority="high" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/45" />
         <div className="absolute inset-0 flex items-center justify-center">
           <h1

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { compressImageDataUrl, getDefaultContent, loadContent, saveClientAuthSnapshot, saveContent, type AdminClient, type AdminImage, type AdminPageContent, type AdminPortfolioItem, type AdminServiceGroup } from "./content";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { fetchContent, getDefaultContent, saveClientAuthSnapshot, saveContent, type AdminClient, type AdminImage, type AdminPageContent, type AdminPortfolioItem, type AdminServiceGroup } from "./content";
 import { clearAdminAuthentication, clearTemporaryAdminPassword, consumeTemporaryAdminPassword, isAdminAuthenticated, saveTemporaryAdminPassword, setAdminAuthenticated } from "../lib/auth";
+import { toMediaSrc } from "../lib/media";
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "admin123";
@@ -19,22 +20,88 @@ function moveItem<T>(items: T[], from: number, to: number): T[] {
   return next;
 }
 
-function readFileAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("Unable to read file"));
-    reader.readAsDataURL(file);
+async function uploadImageFile(file: File) {
+  return uploadImageFileWithProgress(file);
+}
+
+async function uploadImageFileWithProgress(file: File, onProgress?: (loaded: number, total: number) => void) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return new Promise<{ src: string; warning?: string }>((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("POST", "/api/admin/upload");
+
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress?.(event.loaded, event.total || file.size);
+      }
+    };
+
+    request.onerror = () => reject(new Error("Unable to upload image."));
+
+    request.onload = () => {
+      let payload: unknown = null;
+      try {
+        payload = JSON.parse(request.responseText);
+      } catch {
+        payload = null;
+      }
+
+      const typed = payload as { src?: string; error?: string; warning?: string } | null;
+      if (request.status < 200 || request.status >= 300 || !typed?.src) {
+        reject(new Error(typed?.error || "Unable to upload image."));
+        return;
+      }
+
+      resolve({ src: typed.src, warning: typed.warning });
+    };
+
+    request.send(formData);
   });
 }
 
-async function prepareUploadDataUrl(file: File, options?: { preserveOriginal?: boolean }) {
-  const source = await readFileAsDataUrl(file);
-  if (options?.preserveOriginal) {
-    return source;
+function formatBytes(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  let size = value;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
   }
+  return `${size >= 10 ? size.toFixed(0) : size.toFixed(1)} ${units[unitIndex]}`;
+}
 
-  return compressImageDataUrl(source);
+function formatEta(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "--";
+  const whole = Math.max(0, Math.round(seconds));
+  const mins = Math.floor(whole / 60);
+  const secs = whole % 60;
+  if (mins <= 0) return `${secs}s`;
+  return `${mins}m ${secs.toString().padStart(2, "0")}s`;
+}
+
+function isManagedUploadPath(src?: string) {
+  return Boolean(src && src.startsWith("/uploads/"));
+}
+
+async function deleteManagedImage(src: string) {
+  if (!isManagedUploadPath(src)) return;
+
+  await fetch("/api/admin/delete-image", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ src }),
+  }).catch(() => null);
+}
+
+function removeManagedImages(sources: Array<string | undefined>) {
+  sources.forEach((source) => {
+    if (source && isManagedUploadPath(source)) {
+      void deleteManagedImage(source);
+    }
+  });
 }
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -54,7 +121,7 @@ function ImageEditor({ item, onChange, onRemove, onUpload }: { item: AdminImage;
         <button type="button" onClick={onRemove} className="rounded-full border border-[#071018]/10 px-3 py-1 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove</button>
       </div>
       <div className="mt-3 overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#f2e9d9]">
-        <img src={item.src} alt={item.alt || ""} className="h-36 w-full object-cover" />
+        <img src={toMediaSrc(item.src)} alt={item.alt || ""} className="h-36 w-full object-cover" />
       </div>
       <div className="mt-3 space-y-2">
         <label className="block text-sm text-[#4d5561]">
@@ -84,14 +151,49 @@ export default function AdminPage() {
   const [selectedCarouselIds, setSelectedCarouselIds] = useState<Record<string, boolean>>({});
   const [selectedGalleryImageIds, setSelectedGalleryImageIds] = useState<Record<string, Record<string, boolean>>>({});
   const [selectedClientImageIds, setSelectedClientImageIds] = useState<Record<string, Record<string, boolean>>>({});
+  const [uploadProgress, setUploadProgress] = useState<{ label: string; loaded: number; total: number; startedAt: number; speedBps: number; etaSeconds: number | null } | null>(null);
+  const [uploadElapsedMs, setUploadElapsedMs] = useState(0);
+  const uploadStatRef = useRef<{ lastLoaded: number; lastAt: number; speedBps: number }>({
+    lastLoaded: 0,
+    lastAt: 0,
+    speedBps: 0,
+  });
+  const hasHydratedContent = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const saved = isAdminAuthenticated();
     setLoggedIn(saved);
     setAuthChecked(true);
-    setContent(loadContent());
+    void (async () => {
+      const loaded = await fetchContent();
+      setContent(loaded);
+      hasHydratedContent.current = true;
+    })();
   }, []);
+
+  useEffect(() => {
+    if (!hasHydratedContent.current) return;
+
+    const timer = window.setTimeout(() => {
+      void saveContent(content).catch(() => null);
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+  }, [content]);
+
+  useEffect(() => {
+    if (!uploadProgress) {
+      setUploadElapsedMs(0);
+      uploadStatRef.current = { lastLoaded: 0, lastAt: 0, speedBps: 0 };
+      return;
+    }
+
+    const tick = () => setUploadElapsedMs(Date.now() - uploadProgress.startedAt);
+    tick();
+    const interval = window.setInterval(tick, 200);
+    return () => window.clearInterval(interval);
+  }, [uploadProgress]);
 
   const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
@@ -139,11 +241,11 @@ export default function AdminPage() {
   const saveCurrentContent = async () => {
     try {
       await saveContent(content);
-      setMessage("Changes saved locally.");
+      setMessage("Changes saved on site.");
       setShowSaveToast(true);
       window.setTimeout(() => setShowSaveToast(false), 1800);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to save. Storage is full.");
+      setMessage(error instanceof Error ? error.message : "Unable to save changes.");
     }
   };
 
@@ -216,6 +318,11 @@ export default function AdminPage() {
   };
 
   const deleteSelectedCarousel = () => {
+    const removedSources = content.homeCarousel
+      .filter((item) => selectedCarouselIds[item.id])
+      .map((item) => item.src);
+    removeManagedImages(removedSources);
+
     const next = content.homeCarousel.filter((item) => !selectedCarouselIds[item.id]);
     updateHomeCarousel(next);
     setSelectedCarouselIds({});
@@ -247,6 +354,11 @@ export default function AdminPage() {
   const deleteSelectedGalleryImages = (groupIndex: number) => {
     const groupKey = content.gallery[groupIndex].key;
     const selectedForGroup = selectedGalleryImageIds[groupKey] || {};
+    const removedSources = content.gallery[groupIndex].images
+      .filter((image) => selectedForGroup[image.id])
+      .map((image) => image.src);
+    removeManagedImages(removedSources);
+
     const next = [...content.gallery];
     next[groupIndex] = {
       ...next[groupIndex],
@@ -289,6 +401,11 @@ export default function AdminPage() {
   const deleteSelectedClientImages = (clientIndex: number) => {
     const clientId = content.clients[clientIndex].id;
     const selectedForClient = selectedClientImageIds[clientId] || {};
+    const removedSources = content.clients[clientIndex].images
+      .filter((image) => selectedForClient[image.id])
+      .map((image) => image.src);
+    removeManagedImages(removedSources);
+
     const next = [...content.clients];
     next[clientIndex] = {
       ...next[clientIndex],
@@ -319,10 +436,12 @@ export default function AdminPage() {
   };
 
   const resetClientLoginBackground = () => {
+    removeManagedImages([content.clientLoginBackground]);
     setContent((current) => ({ ...current, clientLoginBackground: "/assets/client-bg.jpg" }));
   };
 
   const resetClientCoverImage = (clientIndex: number) => {
+    removeManagedImages([content.clients[clientIndex].coverImage]);
     const next = [...content.clients];
     next[clientIndex] = {
       ...next[clientIndex],
@@ -375,18 +494,74 @@ export default function AdminPage() {
 
   const handleClientBulkUpload = async (files: FileList | null, clientIndex: number) => {
     if (!files?.length) return;
-    const dataUrls = await Promise.all(
-      Array.from(files).map((file) => prepareUploadDataUrl(file, { preserveOriginal: true }))
-    );
-    const next = [...content.clients];
-    next[clientIndex] = {
-      ...next[clientIndex],
-      images: [
-        ...next[clientIndex].images,
-        ...dataUrls.map((src, index) => ({ id: createId(`client-image-${index}`), src, alt: `Client image ${next[clientIndex].images.length + index + 1}` })),
-      ],
-    };
-    updateClients(next);
+    try {
+      const items = Array.from(files);
+      const totalBytes = items.reduce((sum, file) => sum + file.size, 0);
+      const startedAt = Date.now();
+      uploadStatRef.current = { lastLoaded: 0, lastAt: startedAt, speedBps: 0 };
+      setUploadProgress({ label: `Uploading ${items.length} images...`, loaded: 0, total: totalBytes, startedAt, speedBps: 0, etaSeconds: null });
+
+      const uploads: Array<{ src: string; warning?: string }> = [];
+      let completedBytes = 0;
+      for (const file of items) {
+        const result = await uploadImageFileWithProgress(file, (loaded, total) => {
+          setUploadProgress((current) => {
+            if (!current) return current;
+            const nextLoaded = Math.min(totalBytes, completedBytes + Math.min(loaded, total || file.size));
+            const now = Date.now();
+            const deltaBytes = Math.max(0, nextLoaded - uploadStatRef.current.lastLoaded);
+            const deltaMs = Math.max(1, now - uploadStatRef.current.lastAt);
+            const instantBps = (deltaBytes * 1000) / deltaMs;
+            const smoothedBps = uploadStatRef.current.speedBps
+              ? uploadStatRef.current.speedBps * 0.7 + instantBps * 0.3
+              : instantBps;
+            uploadStatRef.current = { lastLoaded: nextLoaded, lastAt: now, speedBps: smoothedBps };
+            const remaining = Math.max(0, totalBytes - nextLoaded);
+            return {
+              ...current,
+              loaded: nextLoaded,
+              total: totalBytes,
+              speedBps: smoothedBps,
+              etaSeconds: smoothedBps > 0 ? remaining / smoothedBps : null,
+            };
+          });
+        });
+        uploads.push(result);
+        completedBytes += file.size;
+        setUploadProgress((current) => {
+          if (!current) return current;
+          const nextLoaded = Math.min(totalBytes, completedBytes);
+          const remaining = Math.max(0, totalBytes - nextLoaded);
+          const speed = uploadStatRef.current.speedBps;
+          return {
+            ...current,
+            loaded: nextLoaded,
+            total: totalBytes,
+            speedBps: speed,
+            etaSeconds: speed > 0 ? remaining / speed : null,
+          };
+        });
+      }
+
+      const firstWarning = uploads.find((entry) => entry.warning)?.warning;
+      if (firstWarning) {
+        setMessage(firstWarning);
+      }
+
+      const next = [...content.clients];
+      next[clientIndex] = {
+        ...next[clientIndex],
+        images: [
+          ...next[clientIndex].images,
+          ...uploads.map((entry, index) => ({ id: createId(`client-image-${index}`), src: entry.src, alt: `Client image ${next[clientIndex].images.length + index + 1}` })),
+        ],
+      };
+      updateClients(next);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to upload images.");
+    } finally {
+      setUploadProgress(null);
+    }
   };
 
   const addServiceGroup = () => {
@@ -438,58 +613,101 @@ export default function AdminPage() {
   };
 
   const handleUpload = async (file: File, target: "carousel" | "portfolio" | "gallery" | "background" | "client" | "client-cover" | "service", index?: number, groupIndex?: number, packageIndex?: number, clientIndex?: number) => {
-    const keepOriginalQuality = target === "client" || target === "client-cover";
-    const dataUrl = await prepareUploadDataUrl(file, { preserveOriginal: keepOriginalQuality });
-    if (target === "carousel") {
-      const next = [...content.homeCarousel];
-      next[index ?? 0] = { ...next[index ?? 0], src: dataUrl };
-      updateHomeCarousel(next);
-      return;
-    }
-    if (target === "portfolio") {
-      const next = [...content.homePortfolio];
-      next[index ?? 0] = { ...next[index ?? 0], src: dataUrl };
-      updatePortfolio(next);
-      return;
-    }
-    if (target === "background") {
-      setContent((current) => ({ ...current, clientLoginBackground: dataUrl }));
-      return;
-    }
-    if (target === "client") {
-      const next = [...content.clients];
-      next[clientIndex ?? 0] = {
-        ...next[clientIndex ?? 0],
-        images: next[clientIndex ?? 0].images.map((img, imgIndex) => (imgIndex === index ? { ...img, src: dataUrl } : img)),
-      };
-      updateClients(next);
-      return;
-    }
-    if (target === "client-cover") {
-      const next = [...content.clients];
-      next[clientIndex ?? 0] = {
-        ...next[clientIndex ?? 0],
-        coverImage: dataUrl,
-      };
-      updateClients(next);
-      return;
-    }
-    if (target === "gallery") {
-      const next = [...content.gallery];
-      next[groupIndex ?? 0] = {
-        ...next[groupIndex ?? 0],
-        images: next[groupIndex ?? 0].images.map((img, imgIndex) => (imgIndex === index ? { ...img, src: dataUrl } : img)),
-      };
-      updateGallery(next);
-      return;
-    }
-    if (target === "service") {
-      const next = [...content.services];
-      next[groupIndex ?? 0] = {
-        ...next[groupIndex ?? 0],
-        packages: next[groupIndex ?? 0].packages.map((pkg, pkgIndex) => (pkgIndex === packageIndex ? { ...pkg, primaryButtonHref: dataUrl } : pkg)),
-      };
-      updateServices(next);
+    try {
+      const startedAt = Date.now();
+      uploadStatRef.current = { lastLoaded: 0, lastAt: startedAt, speedBps: 0 };
+      setUploadProgress({ label: "Uploading image...", loaded: 0, total: file.size, startedAt, speedBps: 0, etaSeconds: null });
+      const uploaded = await uploadImageFileWithProgress(file, (loaded, total) => {
+        setUploadProgress((current) => {
+          if (!current) return current;
+          const nextLoaded = Math.min(loaded, total || file.size);
+          const now = Date.now();
+          const deltaBytes = Math.max(0, nextLoaded - uploadStatRef.current.lastLoaded);
+          const deltaMs = Math.max(1, now - uploadStatRef.current.lastAt);
+          const instantBps = (deltaBytes * 1000) / deltaMs;
+          const smoothedBps = uploadStatRef.current.speedBps
+            ? uploadStatRef.current.speedBps * 0.7 + instantBps * 0.3
+            : instantBps;
+          uploadStatRef.current = { lastLoaded: nextLoaded, lastAt: now, speedBps: smoothedBps };
+          const size = total || file.size;
+          const remaining = Math.max(0, size - nextLoaded);
+          return {
+            ...current,
+            loaded: nextLoaded,
+            total: size,
+            speedBps: smoothedBps,
+            etaSeconds: smoothedBps > 0 ? remaining / smoothedBps : null,
+          };
+        });
+      });
+      if (uploaded.warning) {
+        setMessage(uploaded.warning);
+      }
+      const dataUrl = uploaded.src;
+
+      if (target === "carousel") {
+        const next = [...content.homeCarousel];
+        removeManagedImages([next[index ?? 0]?.src]);
+        next[index ?? 0] = { ...next[index ?? 0], src: dataUrl };
+        updateHomeCarousel(next);
+        return;
+      }
+      if (target === "portfolio") {
+        const next = [...content.homePortfolio];
+        removeManagedImages([next[index ?? 0]?.src]);
+        next[index ?? 0] = { ...next[index ?? 0], src: dataUrl };
+        updatePortfolio(next);
+        return;
+      }
+      if (target === "background") {
+        removeManagedImages([content.clientLoginBackground]);
+        setContent((current) => ({ ...current, clientLoginBackground: dataUrl }));
+        return;
+      }
+      if (target === "client") {
+        const next = [...content.clients];
+        const previous = next[clientIndex ?? 0]?.images[index ?? 0]?.src;
+        removeManagedImages([previous]);
+        next[clientIndex ?? 0] = {
+          ...next[clientIndex ?? 0],
+          images: next[clientIndex ?? 0].images.map((img, imgIndex) => (imgIndex === index ? { ...img, src: dataUrl } : img)),
+        };
+        updateClients(next);
+        return;
+      }
+      if (target === "client-cover") {
+        const next = [...content.clients];
+        removeManagedImages([next[clientIndex ?? 0]?.coverImage]);
+        next[clientIndex ?? 0] = {
+          ...next[clientIndex ?? 0],
+          coverImage: dataUrl,
+        };
+        updateClients(next);
+        return;
+      }
+      if (target === "gallery") {
+        const next = [...content.gallery];
+        const previous = next[groupIndex ?? 0]?.images[index ?? 0]?.src;
+        removeManagedImages([previous]);
+        next[groupIndex ?? 0] = {
+          ...next[groupIndex ?? 0],
+          images: next[groupIndex ?? 0].images.map((img, imgIndex) => (imgIndex === index ? { ...img, src: dataUrl } : img)),
+        };
+        updateGallery(next);
+        return;
+      }
+      if (target === "service") {
+        const next = [...content.services];
+        next[groupIndex ?? 0] = {
+          ...next[groupIndex ?? 0],
+          packages: next[groupIndex ?? 0].packages.map((pkg, pkgIndex) => (pkgIndex === packageIndex ? { ...pkg, primaryButtonHref: dataUrl } : pkg)),
+        };
+        updateServices(next);
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to upload image.");
+    } finally {
+      setUploadProgress(null);
     }
   };
 
@@ -552,6 +770,34 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f1e4] px-4 py-10 text-[#071018]">
+      {uploadProgress && (
+        <div className="fixed bottom-5 right-5 z-50 w-full max-w-sm rounded-2xl border border-[#071018]/10 bg-white/95 p-4 shadow-xl backdrop-blur">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-[#071018]">{uploadProgress.label}</p>
+            <p className="text-xs font-medium text-[#4d5561]">
+              {uploadProgress.total > 0
+                ? `${Math.min(100, Math.round((uploadProgress.loaded / uploadProgress.total) * 100))}%`
+                : "0%"}
+            </p>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#d8cbb1]/40">
+            <div
+              className="h-full rounded-full bg-[#071018] transition-all"
+              style={{
+                width: `${uploadProgress.total > 0 ? Math.min(100, Math.round((uploadProgress.loaded / uploadProgress.total) * 100)) : 0}%`,
+              }}
+            />
+          </div>
+          <p className="mt-2 text-xs text-[#4d5561]">
+            {formatBytes(uploadProgress.loaded)} / {formatBytes(uploadProgress.total)} · {(uploadElapsedMs / 1000).toFixed(1)}s
+          </p>
+          <p className="mt-1 text-xs text-[#4d5561]">
+            {uploadProgress.speedBps > 0 ? `${formatBytes(uploadProgress.speedBps)}/s` : "Calculating speed..."}
+            {" · ETA "}
+            {uploadProgress.etaSeconds === null ? "--" : formatEta(uploadProgress.etaSeconds)}
+          </p>
+        </div>
+      )}
       {showSaveToast && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 px-4">
           <div className="rounded-full bg-[#071018] px-6 py-3 text-sm font-semibold text-white shadow-lg">
@@ -591,7 +837,7 @@ export default function AdminPage() {
                   <input type="checkbox" checked={Boolean(selectedCarouselIds[slide.id])} onChange={() => toggleCarouselSelection(slide.id)} />
                   Select for delete
                 </label>
-                <img src={slide.src} alt={slide.alt || ""} className="h-44 w-full rounded-2xl object-cover" />
+                <img src={toMediaSrc(slide.src)} alt={slide.alt || ""} className="h-44 w-full rounded-2xl object-cover" />
                 <div className="mt-3 space-y-2">
                   <div className="flex gap-2">
                     <button type="button" disabled={index === 0} onClick={() => moveCarouselSlide(index, index - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -605,7 +851,7 @@ export default function AdminPage() {
                     Upload image
                     <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "carousel", index)} className="mt-1 w-full rounded-xl border border-dashed border-[#d8cbb1]/70 bg-white px-3 py-2 text-sm" />
                   </label>
-                  <button type="button" onClick={() => updateHomeCarousel(content.homeCarousel.filter((item) => item.id !== slide.id))} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove</button>
+                  <button type="button" onClick={() => { removeManagedImages([slide.src]); updateHomeCarousel(content.homeCarousel.filter((item) => item.id !== slide.id)); }} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove</button>
                 </div>
               </div>
             ))}
@@ -645,7 +891,7 @@ export default function AdminPage() {
                 } bg-white/70 p-4`}
               >
                 <div className="mb-2 inline-block rounded-full bg-[#d8cbb1]/20 px-2 py-1 text-xs text-[#4d5561]">Position {index + 1}</div>
-                <img src={item.src} alt={item.title} className="h-40 w-full rounded-2xl object-cover" />
+                <img src={toMediaSrc(item.src)} alt={item.title} className="h-40 w-full rounded-2xl object-cover" />
                 <div className="mt-3 space-y-2">
                   <div className="flex gap-2">
                     <button type="button" disabled={index === 0} onClick={() => movePortfolioItem(index, index - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -691,7 +937,7 @@ export default function AdminPage() {
                         <input type="checkbox" checked={Boolean((selectedGalleryImageIds[group.key] || {})[image.id])} onChange={() => toggleGalleryImageSelection(group.key, image.id)} />
                         Select for delete
                       </label>
-                      <img src={image.src} alt={image.alt || ""} className="h-40 w-full rounded-2xl object-cover" />
+                      <img src={toMediaSrc(image.src)} alt={image.alt || ""} className="h-40 w-full rounded-2xl object-cover" />
                       <div className="mt-3 space-y-2">
                         <div className="flex gap-2">
                           <button type="button" disabled={imageIndex === 0} onClick={() => moveGalleryImage(groupIndex, imageIndex, imageIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -705,7 +951,7 @@ export default function AdminPage() {
                           Upload image
                           <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "gallery", imageIndex, groupIndex)} className="mt-1 w-full rounded-xl border border-dashed border-[#d8cbb1]/70 bg-white px-3 py-2 text-sm" />
                         </label>
-                        <button type="button" onClick={() => { const next = [...content.gallery]; next[groupIndex] = { ...next[groupIndex], images: next[groupIndex].images.filter((entry) => entry.id !== image.id) }; updateGallery(next); }} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove</button>
+                        <button type="button" onClick={() => { removeManagedImages([image.src]); const next = [...content.gallery]; next[groupIndex] = { ...next[groupIndex], images: next[groupIndex].images.filter((entry) => entry.id !== image.id) }; updateGallery(next); }} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove</button>
                       </div>
                     </div>
                   ))}
@@ -722,7 +968,7 @@ export default function AdminPage() {
           </label>
           <button type="button" onClick={resetClientLoginBackground} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove upload</button>
           <div className="overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#071018]">
-            <img src={content.clientLoginBackground} alt="Client login background" className="h-56 w-full object-cover" />
+            <img src={toMediaSrc(content.clientLoginBackground)} alt="Client login background" className="h-56 w-full object-cover" />
           </div>
         </SectionCard>
 
@@ -759,7 +1005,7 @@ export default function AdminPage() {
                 <div className="mt-4 rounded-2xl border border-[#d8cbb1]/40 bg-white/70 p-4">
                   <p className="text-sm font-medium text-[#4d5561]">Client cover image</p>
                   <div className="mt-2 overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#071018]">
-                    <img src={client.coverImage || "/assets/client-bg.jpg"} alt={`${client.name} cover`} className="h-40 w-full object-cover" />
+                    <img src={toMediaSrc(client.coverImage || "/assets/client-bg.jpg")} alt={`${client.name} cover`} className="h-40 w-full object-cover" />
                   </div>
                   <label className="mt-3 block text-sm text-[#4d5561]">
                     Upload cover image
@@ -787,7 +1033,7 @@ export default function AdminPage() {
                         <input type="checkbox" checked={Boolean((selectedClientImageIds[client.id] || {})[image.id])} onChange={() => toggleClientImageSelection(client.id, image.id)} />
                         Select for delete
                       </label>
-                      <img src={image.src} alt={image.alt || ""} className="h-40 w-full rounded-2xl object-cover" />
+                      <img src={toMediaSrc(image.src)} alt={image.alt || ""} className="h-40 w-full rounded-2xl object-cover" />
                       <div className="mt-3 space-y-2">
                         <div className="flex gap-2">
                           <button type="button" disabled={imageIndex === 0} onClick={() => moveClientImage(clientIndex, imageIndex, imageIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -801,7 +1047,7 @@ export default function AdminPage() {
                           Upload image
                           <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "client", imageIndex, undefined, undefined, clientIndex)} className="mt-1 w-full rounded-xl border border-dashed border-[#d8cbb1]/70 bg-white px-3 py-2 text-sm" />
                         </label>
-                        <button type="button" onClick={() => { const next = [...content.clients]; next[clientIndex] = { ...next[clientIndex], images: next[clientIndex].images.filter((entry) => entry.id !== image.id) }; updateClients(next); }} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove</button>
+                        <button type="button" onClick={() => { removeManagedImages([image.src]); const next = [...content.clients]; next[clientIndex] = { ...next[clientIndex], images: next[clientIndex].images.filter((entry) => entry.id !== image.id) }; updateClients(next); }} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove</button>
                       </div>
                     </div>
                   ))}

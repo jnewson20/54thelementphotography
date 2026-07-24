@@ -46,6 +46,107 @@ cp .env.example .env.local
 
 Then restart the development server.
 
+## AWS S3 setup (recommended)
+
+This project supports AWS S3 for:
+
+1. Persistent site content JSON
+2. Uploaded image storage
+3. Deleting replaced/removed uploaded images
+
+### 1) Create an S3 bucket
+
+Create a bucket in your preferred region (example: `us-east-1`), for example:
+
+`54thelementphotography-media`
+
+### 2) Create an IAM user for the app
+
+Create an IAM user with programmatic access and attach a policy limited to your bucket.
+
+Use this policy (replace bucket name):
+
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"s3:GetObject",
+				"s3:PutObject",
+				"s3:DeleteObject"
+			],
+			"Resource": "arn:aws:s3:::54thelementphotography-media/*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"s3:ListBucket"
+			],
+			"Resource": "arn:aws:s3:::54thelementphotography-media"
+		}
+	]
+}
+```
+
+### 3) Bucket public-read for uploaded images
+
+If you want direct image URLs to be publicly viewable, allow read-only access for `uploads/*`.
+
+Bucket policy example:
+
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "PublicReadUploads",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetObject",
+			"Resource": "arn:aws:s3:::54thelementphotography-media/uploads/*"
+		}
+	]
+}
+```
+
+### 4) Configure `.env.local`
+
+Add the following values:
+
+```bash
+S3_BUCKET_NAME=54thelementphotography-media
+S3_REGION=us-east-1
+S3_ACCESS_KEY_ID=AKIA...
+S3_SECRET_ACCESS_KEY=...
+S3_PUBLIC_BASE_URL=https://54thelementphotography-media.s3.us-east-1.amazonaws.com
+S3_CONTENT_KEY=admin-content.json
+S3_UPLOAD_PREFIX=uploads
+```
+
+For AWS S3, leave these empty/default:
+
+```bash
+S3_ENDPOINT=
+S3_FORCE_PATH_STYLE=false
+```
+
+### 5) Restart app and test
+
+```bash
+npm run dev
+```
+
+Then in `/admin`:
+
+1. Upload/replace an image
+2. Save changes (auto-save also runs)
+3. Refresh and confirm image persists
+4. Remove an uploaded image and confirm it disappears
+
+If S3 variables are missing, the app automatically falls back to local filesystem storage.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

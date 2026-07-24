@@ -4,14 +4,22 @@ import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import Carousel from "../components/Carousel";
 import LazyContactForm from "../components/LazyContactForm";
-import { getDefaultContent, loadContent, type AdminPageContent } from "./admin/content";
+import { fetchContent, getDefaultContent, type AdminPageContent } from "./admin/content";
+import { toMediaSrc } from "./lib/media";
 
 export default function Home() {
   const [content, setContent] = useState<AdminPageContent>(getDefaultContent());
+  const [heroReady, setHeroReady] = useState(false);
 
   useEffect(() => {
-    const loadedContent = loadContent();
-    setContent(loadedContent);
+    void (async () => {
+      try {
+        const loadedContent = await fetchContent();
+        setContent(loadedContent);
+      } finally {
+        setHeroReady(true);
+      }
+    })();
 
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const revealElements = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
@@ -57,7 +65,11 @@ export default function Home() {
   return (
     <Layout>
       <section className="relative h-screen overflow-hidden">
-        <Carousel slides={heroSlides} interval={6000} />
+        {heroReady ? (
+          <Carousel slides={heroSlides} interval={6000} />
+        ) : (
+          <div className="absolute inset-0 -z-10 bg-[linear-gradient(160deg,#0b1521,#1b2736)]" aria-hidden />
+        )}
         <div className="container relative flex h-full flex-col justify-center">
           <div data-reveal className="reveal mx-auto max-w-3xl text-center">
             <h1 className="soft-float text-[clamp(28px,6vw,56px)] font-extrabold text-white/90 text-shadow-lg text-shadow-black-950">
@@ -81,7 +93,7 @@ export default function Home() {
             <div key={p.id} data-reveal className="reveal group relative h-72 overflow-hidden rounded-[28px]" style={{ transitionDelay: `${index * 80}ms` }}>
               <div className="card-photo h-full w-full">
                 {p.src ? (
-                  <img src={p.src} alt={p.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                  <img src={toMediaSrc(p.src)} alt={p.title} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gray-200 text-xs text-gray-600">
                     No image

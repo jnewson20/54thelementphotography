@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import ImageCard from "./image-card";
+import { toMediaSrc } from "../lib/media";
 
 type ClientGalleryProps = {
   title?: string;
@@ -123,7 +124,7 @@ export default function ClientGallery({ title, images }: ClientGalleryProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-2xl sm:p-8">
           <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 transition-opacity duration-500 ease-out opacity-100">
-                  <Image src={currentImage} alt="Backdrop image" fill className="object-cover" sizes="100vw" priority unoptimized quality={100} />
+                  <Image src={toMediaSrc(currentImage)} alt="Backdrop image" fill className="object-cover" sizes="100vw" priority unoptimized quality={100} />
                 </div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(7,16,24,0.08),transparent_45%),linear-gradient(135deg,rgba(252,249,242,0.82),rgba(239,226,201,0.35))]" />
               </div>
@@ -144,7 +145,7 @@ export default function ClientGallery({ title, images }: ClientGalleryProps) {
                 <div className="relative h-full w-full overflow-hidden ">
                   <div className="absolute inset-0 transition-opacity duration-500 ease-out opacity-100">
                     <Image
-                      src={currentImage}
+                      src={toMediaSrc(currentImage)}
                       alt={`Slide ${(lightboxIndex ?? 0) + 1}`}
                       fill
                       sizes="100vw"

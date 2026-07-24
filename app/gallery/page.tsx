@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { loadContent, type AdminPageContent } from "../admin/content";
+import { fetchContent, type AdminPageContent } from "../admin/content";
 import CategoryCarousel from "./components/CategoryCarousel";
 
 export default function GalleryPage() {
   const [content, setContent] = useState<AdminPageContent | null>(null);
 
   useEffect(() => {
-    setContent(loadContent());
+    void (async () => {
+      setContent(await fetchContent());
+    })();
   }, []);
 
   if (!content) return null;

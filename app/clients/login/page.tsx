@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loadContent } from "../../admin/content";
+import { fetchContent } from "../../admin/content";
 import { saveClientSession } from "../../lib/auth";
+import { toMediaSrc } from "../../lib/media";
 
 export default function ClientLoginPage() {
   const router = useRouter();
@@ -15,9 +16,11 @@ export default function ClientLoginPage() {
   const [clients, setClients] = useState<Array<{ username: string; password: string }>>([]);
 
   useEffect(() => {
-    const content = loadContent();
-    setBackground(content.clientLoginBackground);
-    setClients(content.clients.map((client) => ({ username: client.username, password: client.password })));
+    void (async () => {
+      const content = await fetchContent();
+      setBackground(content.clientLoginBackground);
+      setClients(content.clients.map((client) => ({ username: client.username, password: client.password })));
+    })();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -45,7 +48,7 @@ export default function ClientLoginPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center">
       <div className="absolute inset-0" aria-hidden>
-        <img src={background} alt="Client background" className="h-full w-full object-cover" loading="eager" decoding="async" fetchPriority="high" />
+        <img src={toMediaSrc(background)} alt="Client background" className="h-full w-full object-cover" loading="eager" decoding="async" fetchPriority="high" />
       </div>
 
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" aria-hidden />

@@ -55,6 +55,7 @@ export type AdminPageContent = {
 
 const STORAGE_KEY = "54th-element-admin-content-v1";
 const CLIENT_AUTH_STORAGE_KEY = "54th-element-admin-client-auth-v1";
+const CONTENT_API_PATH = "/api/admin/content";
 
 type ClientAuthSnapshot = {
   id: string;
@@ -404,31 +405,69 @@ export function loadContent(): AdminPageContent {
 export async function saveContent(content: AdminPageContent) {
   if (typeof window === "undefined") return;
 
-  // Persist lightweight credentials first so client logins continue to work
-  // even if the large media payload hits localStorage limits.
+  // Keep auth snapshot local for instant login reliability.
   saveClientAuthSnapshot(content.clients);
 
-  const saveAttempts: Array<{ maxWidth: number; quality: number }> = [
-    { maxWidth: 1400, quality: 0.8 },
-    { maxWidth: 1100, quality: 0.72 },
-    { maxWidth: 900, quality: 0.62 },
-    { maxWidth: 720, quality: 0.52 },
-    { maxWidth: 560, quality: 0.45 },
-  ];
+  const response = await fetch(CONTENT_API_PATH, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
 
-  let lastError: unknown = null;
-
-  for (const attempt of saveAttempts) {
-    try {
-      const compactContent = await normalizeContentForStorage(content, attempt);
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(compactContent));
-      return;
-    } catch (error) {
-      lastError = error;
-    }
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(payload?.error || "Unable to save content.");
   }
 
-  throw new Error(
-    `Unable to save content to local storage without degrading client image quality. ${lastError instanceof Error ? lastError.message : "Storage quota exceeded."}`
-  );
+  // Maintain local fallback copy for offline convenience.
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
+  } catch {
+    // Ignore local fallback failures.
+  }
+}
+
+export async function fetchContent(): Promise<AdminPageContent> {
+  if (typeof window === "undefined") {
+    return getDefaultContent();
+  }
+
+  try {
+    const response = await fetch(CONTENT_API_PATH, { cache: "no-store" });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok || !payload?.content) {
+      throw new Error(payload?.error || "Unable to load content.");
+    }
+
+    const parsed = payload.content as Partial<AdminPageContent>;
+    const base = getDefaultContent();
+    const baseClients =
+      parsed.clients?.map((client, index) => ({
+        ...client,
+        coverImage:
+          (client as Partial<AdminClient>).coverImage ||
+          base.clients[index]?.coverImage ||
+          "/assets/client-bg.jpg",
+      })) ?? base.clients;
+
+    const normalized: AdminPageContent = {
+      homeCarousel: parsed.homeCarousel ?? base.homeCarousel,
+      homePortfolio: sanitizePortfolio(parsed.homePortfolio as Partial<AdminPortfolioItem>[] | undefined, base.homePortfolio),
+      gallery: parsed.gallery ?? base.gallery,
+      clientLoginBackground: parsed.clientLoginBackground ?? base.clientLoginBackground,
+      clients: baseClients,
+      services: parsed.services ?? base.services,
+    };
+
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    } catch {
+      // Ignore local cache failures.
+    }
+
+    return normalized;
+  } catch {
+    return loadContent();
+  }
 }

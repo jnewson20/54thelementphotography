@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import type { StaticImageData } from "next/image";
+import { toMediaSrc } from "../../lib/media";
 
 type Slide = { src?: string | StaticImageData; alt?: string };
 
@@ -41,7 +42,7 @@ export default function CategoryCarousel({
               >
                 {src ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={src} alt={slide.alt || ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                  <img src={toMediaSrc(src)} alt={slide.alt || ""} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-full h-full bg-[#ffffff]" />
                 )}

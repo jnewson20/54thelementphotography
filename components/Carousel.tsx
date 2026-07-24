@@ -1,6 +1,7 @@
 'use client';
 import Image, { type StaticImageData } from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import { toMediaSrc } from "../app/lib/media";
 
 type Slide = { src: string | StaticImageData; alt?: string };
 
@@ -25,7 +26,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
           aria-label={s.alt || `slide-${i}`}
         >
           <Image
-            src={s.src}
+            src={typeof s.src === "string" ? toMediaSrc(s.src) : s.src}
             alt={s.alt || `slide-${i}`}
             fill
             className="object-cover"
