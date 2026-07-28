@@ -14,8 +14,9 @@ function normalizeSlugValue(value?: string) {
   }
 }
 
-export default async function ClientPage({ params }: { params: { slug?: string | string[] } }) {
-  const rawSlug = params?.slug;
+export default async function ClientPage({ params }: { params: Promise<{ slug?: string | string[] }> }) {
+  const resolvedParams = await params;
+  const rawSlug = resolvedParams?.slug;
   const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
   const normalizedSlug = normalizeSlugValue(slug);
   const content = await loadContentServer();

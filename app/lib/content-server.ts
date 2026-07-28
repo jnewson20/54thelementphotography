@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { getDefaultContent, type AdminClient, type AdminPageContent, type AdminPortfolioItem } from "../admin/content";
+import { isS3Configured, readS3ContentObject, writeS3ContentObject } from "./server-storage";
 
 const DATA_DIR = path.join(process.cwd(), "storage");
 const CONTENT_PATH = path.join(DATA_DIR, "admin-content.json");
@@ -54,6 +55,18 @@ function normalizeContent(parsed: Partial<AdminPageContent>): AdminPageContent {
 }
 
 export async function loadContentServer(): Promise<AdminPageContent> {
+  if (isS3Configured()) {
+    try {
+      const raw = await readS3ContentObject();
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<AdminPageContent>;
+        return normalizeContent(parsed);
+      }
+    } catch {
+      // Fall through to local file fallback.
+    }
+  }
+
   try {
     const raw = await fs.readFile(CONTENT_PATH, "utf8");
     if (!raw) {
@@ -64,5 +77,24 @@ export async function loadContentServer(): Promise<AdminPageContent> {
     return normalizeContent(parsed);
   } catch {
     return getDefaultContent();
+  }
+}
+
+export async function saveContentServer(content: AdminPageContent): Promise<void> {
+  const serialized = JSON.stringify(content, null, 2);
+
+  if (isS3Configured()) {
+    try {
+      await writeS3ContentObject(serialized);
+    } catch {
+      // Continue to local write fallback.
+    }
+  }
+
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(CONTENT_PATH, serialized, "utf8");
+  } catch {
+    // Ignore local write failures on read-only deployments.
   }
 }

@@ -1,19 +1,10 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
 import { getDefaultContent, type AdminPageContent } from "../../../admin/content";
-import { loadContentServer } from "../../../lib/content-server";
-
-const DATA_DIR = path.join(process.cwd(), "storage");
-const CONTENT_PATH = path.join(DATA_DIR, "admin-content.json");
+import { loadContentServer, saveContentServer } from "../../../lib/content-server";
 
 type ContentPayload = {
   content?: AdminPageContent;
 };
-
-async function ensureDataDir() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-}
 
 function normalizeContent(parsed: Partial<AdminPageContent>): AdminPageContent {
   const base = getDefaultContent();
@@ -43,8 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "content is required" }, { status: 400 });
     }
 
-    await ensureDataDir();
-    await fs.writeFile(CONTENT_PATH, JSON.stringify(body.content, null, 2), "utf8");
+    await saveContentServer(body.content);
 
     return NextResponse.json({ ok: true });
   } catch {
