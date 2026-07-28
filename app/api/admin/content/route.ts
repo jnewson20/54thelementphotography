@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { getDefaultContent, type AdminPageContent } from "../../../admin/content";
+import { loadContentServer } from "../../../lib/content-server";
 
 const DATA_DIR = path.join(process.cwd(), "storage");
 const CONTENT_PATH = path.join(DATA_DIR, "admin-content.json");
@@ -29,12 +30,7 @@ function normalizeContent(parsed: Partial<AdminPageContent>): AdminPageContent {
 
 export async function GET() {
   try {
-    const raw = await fs.readFile(CONTENT_PATH, "utf8");
-    if (!raw) {
-      return NextResponse.json({ content: getDefaultContent() });
-    }
-    const parsed = JSON.parse(raw) as Partial<AdminPageContent>;
-    return NextResponse.json({ content: normalizeContent(parsed) });
+    return NextResponse.json({ content: await loadContentServer() });
   } catch {
     return NextResponse.json({ content: getDefaultContent() });
   }

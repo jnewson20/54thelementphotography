@@ -1,34 +1,10 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-import { fetchContent, type AdminPageContent } from "../admin/content";
+import { loadContentServer } from "../lib/content-server";
 import CategoryCarousel from "./components/CategoryCarousel";
 
-export default function GalleryPage() {
-  const [content, setContent] = useState<AdminPageContent | null>(null);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    void (async () => {
-      setContent(await fetchContent({ fresh: true }));
-    })();
-  }, []);
-
-  if (!content) return (
-    <div className="container w-screen space-y-5">
-      <header className="max-w-3xl space-y-2">
-        <div className="h-9 w-32 animate-pulse rounded-lg bg-[#d8cbb1]/40" />
-        <div className="h-4 w-64 animate-pulse rounded bg-[#d8cbb1]/30" />
-      </header>
-      <div className="flex flex-col mt-8 gap-6">
-        {[1, 2, 3].map((n) => (
-          <div key={n}>
-            <div className="h-6 w-28 animate-pulse rounded bg-[#d8cbb1]/40 mb-4" />
-            <div className="h-[320px] sm:h-[420px] md:h-[520px] w-full animate-pulse rounded bg-[#d8cbb1]/30" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+export default async function GalleryPage() {
+  const content = await loadContentServer();
 
   return (
     <div className="container w-screen space-y-5">
@@ -46,8 +22,6 @@ export default function GalleryPage() {
 
             <div className=" container justify-center w-full">
               <CategoryCarousel slides={cat.images} interval={5000} />
-
-
             </div>
           </section>
         ))}

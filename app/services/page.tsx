@@ -1,20 +1,11 @@
 
-"use client";
-
-import React, { useEffect, useState } from "react";
-import { fetchContent, type AdminPageContent } from "../admin/content";
+import { loadContentServer } from "../lib/content-server";
 import PackageCard from "./PackageCard";
 
-export default function ServicesPage() {
-  const [content, setContent] = useState<AdminPageContent | null>(null);
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    void (async () => {
-      setContent(await fetchContent({ fresh: true }));
-    })();
-  }, []);
-
-  if (!content) return null;
+export default async function ServicesPage() {
+  const content = await loadContentServer();
 
   return (
     <div className="container py-20">
