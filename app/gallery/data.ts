@@ -27,9 +27,9 @@ export const GALLERY: GalleryCategory[] = [
     key: "branding",
     title: "Branding",
     images: [
-      { src: "/assets/gallery/branding:media/Du-16.jpg", alt: "Branding 1" },
-      { src: "/assets/gallery/branding:media/Du-22.jpg", alt: "Branding 2" },
-      { src: "/assets/gallery/branding:media/MSB-107.jpg", alt: "Branding 3" }
+      { src: "/assets/gallery/branding-media/Du-16.jpg", alt: "Branding 1" },
+      { src: "/assets/gallery/branding-media/Du-22.jpg", alt: "Branding 2" },
+      { src: "/assets/gallery/branding-media/MSB-107.jpg", alt: "Branding 3" }
     ],
   },
 ];

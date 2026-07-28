@@ -6,11 +6,6 @@
       "alt": "Hero 2"
     },
     {
-      "id": "hero-1",
-      "src": "/assets/hero/Kordaja%20Maternity-2.jpg",
-      "alt": "Hero 1"
-    },
-    {
       "id": "hero-3",
       "src": "/assets/hero/Noah-4.jpg",
       "alt": "Hero 3"
@@ -19,23 +14,28 @@
       "id": "carousel-k5cs0m",
       "src": "/assets/hero/1784905852222-cdf0f6cc8d7b1193.jpg",
       "alt": "New slide"
+    },
+    {
+      "id": "carousel-bs8ykx",
+      "src": "/assets/hero/Kordaja%20Maternity-2.jpg",
+      "alt": "New slide"
     }
   ],
   "homePortfolio": [
     {
       "id": "p-1",
       "title": "Editorial Series",
-      "src": "/assets/home%20portfolio/Korea%20Southaven-09.jpg"
+      "src": "/assets/home-portfolio/Korea%20Southaven-09.jpg"
     },
     {
       "id": "p-2",
       "title": "Landscape Study",
-      "src": "/assets/home%20portfolio/Kyla%20%20Mocha-26.jpg"
+      "src": "/assets/home-portfolio/Kyla%20%20Mocha-26.jpg"
     },
     {
       "id": "p-3",
       "title": "Portrait Set",
-      "src": "/assets/home%20portfolio/Newson%20Fam-43.jpg"
+      "src": "/assets/home-portfolio/Newson%20Fam-43.jpg"
     }
   ],
   "gallery": [
@@ -87,23 +87,23 @@
       "images": [
         {
           "id": "branding-1",
-          "src": "/assets/gallery/branding%3Amedia/Du-16.jpg",
+          "src": "/assets/gallery/branding-media/Du-16.jpg",
           "alt": "Branding 1"
         },
         {
           "id": "branding-2",
-          "src": "/assets/gallery/branding%3Amedia/Du-22.jpg",
+          "src": "/assets/gallery/branding-media/Du-22.jpg",
           "alt": "Branding 2"
         },
         {
           "id": "branding-3",
-          "src": "/assets/gallery/branding%3Amedia/MSB-107.jpg",
+          "src": "/assets/gallery/branding-media/MSB-107.jpg",
           "alt": "Branding 3"
         }
       ]
     }
   ],
-  "clientLoginBackground": "/assets/client%20login/Newson%20Fam-1%20copy.jpg",
+  "clientLoginBackground": "/assets/client-login/Newson%20Fam-1%20copy.jpg",
   "clients": [
     {
       "id": "client-sample",
@@ -111,7 +111,7 @@
       "username": "Korea",
       "password": "Cowboys20",
       "galleryTitle": "Newsons",
-      "coverImage": "/assets/client%20login/1784905944029-77e4f6092c5d9791.jpg",
+      "coverImage": "/assets/client-login/Newson%20Fam-1%20copy.jpg",
       "images": [
         {
           "id": "client-image-0-tt202y",

@@ -73,9 +73,9 @@ export const SECTION_DEFAULT_IMAGE_SRC = {
     localAssetPath("hero", "Noah-4.jpg"),
   ],
   homePortfolio: [
-    localAssetPath("home portfolio", "Korea Southaven-09.jpg"),
-    localAssetPath("home portfolio", "Kyla  Mocha-26.jpg"),
-    localAssetPath("home portfolio", "Newson Fam-43.jpg"),
+    localAssetPath("home-portfolio", "Korea Southaven-09.jpg"),
+    localAssetPath("home-portfolio", "Kyla  Mocha-26.jpg"),
+    localAssetPath("home-portfolio", "Newson Fam-43.jpg"),
   ],
   galleryPortrait: [
     localAssetPath("gallery", "portrait", "JQ-38.jpg"),
@@ -88,11 +88,11 @@ export const SECTION_DEFAULT_IMAGE_SRC = {
     localAssetPath("gallery", "wedding", "The Walker's-346.jpg"),
   ],
   galleryBranding: [
-    localAssetPath("gallery", "branding:media", "Du-16.jpg"),
-    localAssetPath("gallery", "branding:media", "Du-22.jpg"),
-    localAssetPath("gallery", "branding:media", "MSB-107.jpg"),
+    localAssetPath("gallery", "branding-media", "Du-16.jpg"),
+    localAssetPath("gallery", "branding-media", "Du-22.jpg"),
+    localAssetPath("gallery", "branding-media", "MSB-107.jpg"),
   ],
-  clientLoginBackground: localAssetPath("client login", "Newson Fam-1 copy.jpg"),
+  clientLoginBackground: localAssetPath("client-login", "Newson Fam-1 copy.jpg"),
 };
 
 export const DEFAULT_CLIENT_COVER_IMAGE = SECTION_DEFAULT_IMAGE_SRC.clientLoginBackground;

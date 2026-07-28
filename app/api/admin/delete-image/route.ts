@@ -10,12 +10,15 @@ type DeletePayload = {
 const PUBLIC_DIR = path.join(process.cwd(), "public");
 const MANAGED_ASSET_PREFIXES = [
   "/assets/hero/",
+  "/assets/home-portfolio/",
   "/assets/home%20portfolio/",
   "/assets/home portfolio/",
   "/assets/gallery/portrait/",
   "/assets/gallery/wedding/",
+  "/assets/gallery/branding-media/",
   "/assets/gallery/branding%3Amedia/",
   "/assets/gallery/branding:media/",
+  "/assets/client-login/",
   "/assets/client%20login/",
   "/assets/client login/",
 ];
