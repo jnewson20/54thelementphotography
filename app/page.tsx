@@ -16,7 +16,7 @@ export default function Home() {
   useEffect(() => {
     void (async () => {
       try {
-        const loadedContent = await fetchContent();
+        const loadedContent = await fetchContent({ fresh: true });
         setContent(loadedContent);
       } finally {
         setHeroReady(true);

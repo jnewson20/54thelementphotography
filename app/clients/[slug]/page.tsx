@@ -61,7 +61,7 @@ export default function ClientPage() {
     }
 
     void (async () => {
-      const content = await fetchContent();
+      const content = await fetchContent({ fresh: true });
       const client =
         content.clients.find((entry) => normalizeSlugValue(entry.username) === normalizedSlug) ?? null;
 

@@ -25,6 +25,23 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
   }, [slides.length, interval]);
 
   useEffect(() => {
+    if (slides.length === 0) return;
+
+    const preloaders: HTMLImageElement[] = [];
+    slides.forEach((slide) => {
+      const src = typeof slide.src === "string" ? toMediaSrc(slide.src) : slide.src.src;
+      if (!src) return;
+      const image = new window.Image();
+      image.src = src;
+      preloaders.push(image);
+    });
+
+    return () => {
+      preloaders.length = 0;
+    };
+  }, [slides]);
+
+  useEffect(() => {
     const previous = indexRef.current;
     if (previous === index) return;
 
@@ -50,7 +67,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
       setIsTransitioning(false);
       setPrevIndex(null);
       transitionTimeoutRef.current = null;
-    }, 760);
+    }, 920);
   }, [index]);
 
   useEffect(() => {
@@ -67,13 +84,14 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
   return (
     <div className="absolute inset-0 -z-10" aria-hidden >
       {isTransitioning && prevIndex !== null && slides[prevIndex] ? (
-        <div className={`absolute inset-0 transition-opacity duration-700 ease-out ${previousVisible ? "opacity-80" : "opacity-0"}`}>
+        <div className={`absolute inset-0 transition-opacity duration-900 ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
           <Image
             src={typeof slides[prevIndex].src === "string" ? toMediaSrc(slides[prevIndex].src) : slides[prevIndex].src}
             alt={slides[prevIndex].alt || `slide-${prevIndex}`}
             fill
             className="object-cover"
-            loading="lazy"
+            priority={prevIndex === 0}
+            loading="eager"
             placeholder={typeof slides[prevIndex].src === "object" ? "blur" : "empty"}
             sizes="100vw"
             quality={70}
@@ -84,7 +102,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
       {activeSlide ? (
         <div
           key={index}
-          className={`absolute inset-0 slide transition-opacity duration-700 ease-out ${activeVisible ? "opacity-80" : "opacity-0"}`}
+          className={`absolute inset-0 slide transition-opacity duration-900 ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}
           role="img"
           aria-label={activeSlide.alt || `slide-${index}`}
         >
@@ -94,7 +112,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
             fill
             className="object-cover"
             priority={index === 0}
-            loading={index === 0 ? "eager" : "lazy"}
+            loading="eager"
             placeholder={typeof activeSlide.src === "object" ? "blur" : "empty"}
             sizes="100vw"
             quality={70}

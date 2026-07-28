@@ -18,7 +18,7 @@ export default function ClientLoginPage() {
 
   useEffect(() => {
     void (async () => {
-      const content = await fetchContent();
+      const content = await fetchContent({ fresh: true });
       setBackground(content.clientLoginBackground);
       setClients(content.clients.map((client) => ({ username: client.username, password: client.password })));
     })();

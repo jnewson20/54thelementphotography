@@ -10,7 +10,7 @@ export default function ServicesPage() {
 
   useEffect(() => {
     void (async () => {
-      setContent(await fetchContent());
+      setContent(await fetchContent({ fresh: true }));
     })();
   }, []);
 

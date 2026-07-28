@@ -33,6 +33,23 @@ export default function CategoryCarousel({
   }, [interval, slides.length]);
 
   useEffect(() => {
+    if (slides.length === 0) return;
+
+    const preloaders: HTMLImageElement[] = [];
+    slides.forEach((slide) => {
+      const src = typeof slide?.src === "string" ? toMediaSrc(slide.src) : slide?.src?.src;
+      if (!src) return;
+      const image = new window.Image();
+      image.src = src;
+      preloaders.push(image);
+    });
+
+    return () => {
+      preloaders.length = 0;
+    };
+  }, [slides]);
+
+  useEffect(() => {
     const previous = activeRef.current;
     if (previous === active) return;
 
@@ -58,7 +75,7 @@ export default function CategoryCarousel({
       setIsTransitioning(false);
       setPrevActive(null);
       transitionTimeoutRef.current = null;
-    }, 760);
+    }, 920);
   }, [active]);
 
   useEffect(() => {
@@ -85,20 +102,21 @@ export default function CategoryCarousel({
       <div className="relative min-h-[320px] w-full sm:min-h-[420px] md:min-h-[520px]">
         <div className="absolute inset-0 drop-shadow-md shadow-black" aria-hidden="true">
           {isTransitioning && previousSrc ? (
-            <div className={`absolute inset-0 transition-opacity duration-700 ease-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
+            <div className={`absolute inset-0 transition-opacity duration-900 ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
               <Image
                 src={toMediaSrc(previousSrc)}
                 alt={previousSlide?.alt || ""}
                 fill
                 className="w-full h-full object-cover"
                 sizes="100vw"
-                loading="lazy"
+                priority={prevActive === 0}
+                loading="eager"
                 quality={68}
               />
             </div>
           ) : null}
 
-          <div key={`slide-${active}`} className={`absolute inset-0 transition-opacity duration-700 ease-out ${activeVisible ? "opacity-100" : "opacity-0"}`}>
+          <div key={`slide-${active}`} className={`absolute inset-0 transition-opacity duration-900 ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}>
             {activeSrc ? (
               <Image
                 src={toMediaSrc(activeSrc)}
@@ -106,7 +124,8 @@ export default function CategoryCarousel({
                 fill
                 className="w-full h-full object-cover"
                 sizes="100vw"
-                loading="lazy"
+                priority={active === 0}
+                loading="eager"
                 quality={68}
               />
             ) : (

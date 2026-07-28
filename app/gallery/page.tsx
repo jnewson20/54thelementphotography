@@ -9,7 +9,7 @@ export default function GalleryPage() {
 
   useEffect(() => {
     void (async () => {
-      setContent(await fetchContent());
+      setContent(await fetchContent({ fresh: true }));
     })();
   }, []);
 
