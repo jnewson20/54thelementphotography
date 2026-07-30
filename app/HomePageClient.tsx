@@ -6,6 +6,7 @@ import Layout from "../components/Layout";
 import Carousel from "../components/Carousel";
 import LazyContactForm from "../components/LazyContactForm";
 import { type AdminPageContent } from "./admin/content";
+import { IMAGE_SIZES } from "./lib/image-sizes";
 import { toMediaSrc } from "./lib/media";
 
 export default function HomePageClient({ content }: { content: AdminPageContent }) {
@@ -74,7 +75,7 @@ export default function HomePageClient({ content }: { content: AdminPageContent 
                     alt={p.title}
                     fill
                     className="h-full w-full object-cover"
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes={IMAGE_SIZES.THIRD}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gray-200 text-xs text-gray-600">
@@ -103,11 +104,11 @@ export default function HomePageClient({ content }: { content: AdminPageContent 
         <div className="grid items-center gap-8 md:grid-cols-2">
           <div data-reveal className="reveal relative h-80 overflow-hidden rounded-[32px] bg-[#071018] shadow-[0_24px_60px_rgba(7,16,24,0.16)] md:h-[520px]">
             <Image
-              src="/assets/about-1.jpg"
+              src="/assets/about-1-1.avif"
               alt="Photographer portrait"
               fill
               className="h-full w-full object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes={IMAGE_SIZES.HALF}
             />
           </div>
 

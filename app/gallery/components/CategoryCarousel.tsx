@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
+import { IMAGE_SIZES } from "../../lib/image-sizes";
 import { toMediaSrc } from "../../lib/media";
 
 type Slide = { src?: string | StaticImageData; alt?: string };
@@ -108,10 +109,10 @@ export default function CategoryCarousel({
                 alt={previousSlide?.alt || ""}
                 fill
                 className="w-full h-full object-cover"
-                sizes="100vw"
+                sizes={IMAGE_SIZES.FULL_BLEED}
                 priority={prevActive === 0}
                 loading="eager"
-                quality={68}
+                unoptimized
               />
             </div>
           ) : null}
@@ -123,10 +124,10 @@ export default function CategoryCarousel({
                 alt={activeSlide?.alt || ""}
                 fill
                 className="w-full h-full object-cover"
-                sizes="100vw"
+                sizes={IMAGE_SIZES.FULL_BLEED}
                 priority={active === 0}
                 loading="eager"
-                quality={68}
+                unoptimized
               />
             ) : (
               <div className="w-full h-full bg-[#ffffff]" />

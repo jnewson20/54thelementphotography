@@ -1,6 +1,7 @@
 'use client';
 import Image, { type StaticImageData } from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import { IMAGE_SIZES } from "../app/lib/image-sizes";
 import { toMediaSrc } from "../app/lib/media";
 
 type Slide = { src: string | StaticImageData; alt?: string };
@@ -20,8 +21,11 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
   useEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced || slides.length <= 1) return;
+
     timer.current = window.setInterval(() => setIndex((i) => (i + 1) % slides.length), interval);
-    return () => { if (timer.current) window.clearInterval(timer.current); };
+    return () => {
+      if (timer.current) window.clearInterval(timer.current);
+    };
   }, [slides.length, interval]);
 
   useEffect(() => {
@@ -82,7 +86,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
   }, []);
 
   return (
-    <div className="absolute inset-0 -z-10" aria-hidden >
+    <div className="absolute inset-0 -z-10" aria-hidden>
       {isTransitioning && prevIndex !== null && slides[prevIndex] ? (
         <div className={`absolute inset-0 transition-opacity duration-900 ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
           <Image
@@ -92,9 +96,9 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
             className="object-cover"
             priority={prevIndex === 0}
             loading="eager"
+            unoptimized
             placeholder={typeof slides[prevIndex].src === "object" ? "blur" : "empty"}
-            sizes="100vw"
-            quality={70}
+            sizes={IMAGE_SIZES.FULL_BLEED}
           />
         </div>
       ) : null}
@@ -113,13 +117,13 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
             className="object-cover"
             priority={index === 0}
             loading="eager"
+            unoptimized
             placeholder={typeof activeSlide.src === "object" ? "blur" : "empty"}
-            sizes="100vw"
-            quality={70}
+            sizes={IMAGE_SIZES.FULL_BLEED}
           />
         </div>
       ) : null}
-      {/* overlay for contrast */}
+
       <div className="absolute inset-0 bg-black/80 -z-5 pointer-events-none" />
     </div>
   );

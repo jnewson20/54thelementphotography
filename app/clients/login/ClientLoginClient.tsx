@@ -4,6 +4,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveClientSession } from "../../lib/auth";
+import { IMAGE_SIZES } from "../../lib/image-sizes";
 import { toMediaSrc } from "../../lib/media";
 
 type ClientLoginClientProps = {
@@ -49,7 +50,7 @@ export default function ClientLoginClient({ background, clients }: ClientLoginCl
           fill
           className="h-full w-full object-cover"
           loading="eager"
-          sizes="100vw"
+          sizes={IMAGE_SIZES.FULL_BLEED}
         />
       </div>
 

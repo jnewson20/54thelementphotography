@@ -1,6 +1,7 @@
 // app/clients/image-card.tsx
 "use client";
 import Image from "next/image";
+import { IMAGE_SIZES } from "../lib/image-sizes";
 import { toMediaSrc } from "../lib/media";
 
 type ImageCardProps = {
@@ -45,7 +46,7 @@ export default function ImageCard({ src, alt, selected = false, onSelect, onOpen
           fill
           unoptimized
           quality={100}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          sizes={IMAGE_SIZES.THIRD}
           className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
         />
         <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-white/30 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

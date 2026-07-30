@@ -1,23 +1,23 @@
 {
   "homeCarousel": [
     {
+      "id": "hero-1",
+      "src": "/assets/hero/Newson%20Fam-33-3.avif",
+      "alt": "Hero 1"
+    },
+    {
       "id": "hero-2",
-      "src": "/assets/hero/Newson%20Fam-33.jpg",
+      "src": "/assets/hero/Kordaja%20Maternity-2-1.avif",
       "alt": "Hero 2"
     },
     {
-      "id": "carousel-bs8ykx",
-      "src": "/assets/hero/Kordaja%20Maternity-2.jpg",
-      "alt": "New slide"
-    },
-    {
       "id": "hero-3",
-      "src": "/assets/hero/Noah-4.jpg",
+      "src": "/assets/hero/TheMarr-74-2.avif",
       "alt": "Hero 3"
     },
     {
-      "id": "carousel-k5cs0m",
-      "src": "/assets/hero/TheMarr-74-1.jpg",
+      "id": "carousel-zfo12k",
+      "src": "/assets/hero/Noah-4-1.avif",
       "alt": "New slide"
     }
   ],
@@ -25,17 +25,17 @@
     {
       "id": "p-1",
       "title": "Editorial Series",
-      "src": "/assets/home-portfolio/Korea%20Southaven-09.jpg"
+      "src": "/assets/home-portfolio/IMGL2816-1.avif"
     },
     {
       "id": "p-2",
       "title": "Landscape Study",
-      "src": "/assets/home-portfolio/Kyla%20%20Mocha-26.jpg"
+      "src": "/assets/home-portfolio/Newson%20Fam-43-1.avif"
     },
     {
       "id": "p-3",
       "title": "Portrait Set",
-      "src": "/assets/home-portfolio/Newson%20Fam-43.jpg"
+      "src": "/assets/home-portfolio/Kyla%20%20Mocha-26-3-1.avif"
     }
   ],
   "gallery": [
@@ -45,18 +45,28 @@
       "images": [
         {
           "id": "portrait-1",
-          "src": "/assets/gallery/portrait/JQ-38.jpg",
+          "src": "/assets/gallery/portrait/JQ-6-2-1.avif",
           "alt": "Portrait 1"
         },
         {
           "id": "portrait-2",
-          "src": "/assets/gallery/portrait/JQ-6.jpg",
+          "src": "/assets/gallery/portrait/JQ-38-1-1.avif",
           "alt": "Portrait 2"
         },
         {
           "id": "portrait-3",
-          "src": "/assets/gallery/portrait/Kordaja%20Maternity-2.jpg",
+          "src": "/assets/gallery/portrait/Newson%20Fam-46-4-1.avif",
           "alt": "Portrait 3"
+        },
+        {
+          "id": "gallery-c3a2fh",
+          "src": "/assets/gallery/portrait/TheMarr-58-3-1.avif",
+          "alt": "New image"
+        },
+        {
+          "id": "gallery-b0zu4r",
+          "src": "/assets/gallery/portrait/Kordaja%20Maternity-2-1-1.avif",
+          "alt": "New image"
         }
       ]
     },
@@ -66,17 +76,17 @@
       "images": [
         {
           "id": "wedding-1",
-          "src": "/assets/gallery/wedding/JQ%20Finals-9.jpg",
+          "src": "/assets/gallery/wedding/The%20Walker's-124-3-1.avif",
           "alt": "Wedding 1"
         },
         {
           "id": "wedding-2",
-          "src": "/assets/gallery/wedding/The%20Walker's-124.jpg",
+          "src": "/assets/gallery/wedding/The%20Walker's-346-2-1.avif",
           "alt": "Wedding 2"
         },
         {
           "id": "wedding-3",
-          "src": "/assets/gallery/wedding/The%20Walker's-346.jpg",
+          "src": "/assets/gallery/wedding/JQ%20Finals-9-1-1.avif",
           "alt": "Wedding 3"
         }
       ]
@@ -87,86 +97,371 @@
       "images": [
         {
           "id": "branding-1",
-          "src": "/assets/gallery/branding-media/Du-16.jpg",
+          "src": "/assets/gallery/branding-media/MSB-107-5-1.avif",
           "alt": "Branding 1"
         },
         {
           "id": "branding-2",
-          "src": "/assets/gallery/branding-media/Du-22.jpg",
+          "src": "/assets/gallery/branding-media/MSB-143-4-1.avif",
           "alt": "Branding 2"
         },
         {
           "id": "branding-3",
-          "src": "/assets/gallery/branding-media/MSB-107.jpg",
+          "src": "/assets/gallery/branding-media/MSB-197-3-1.avif",
           "alt": "Branding 3"
+        },
+        {
+          "id": "gallery-d29dhh",
+          "src": "/assets/gallery/branding-media/Du-16-2-1.avif",
+          "alt": "New image"
+        },
+        {
+          "id": "gallery-mpnh0o",
+          "src": "/assets/gallery/branding-media/Du-22-1-1.avif",
+          "alt": "New image"
         }
       ]
     }
   ],
-  "clientLoginBackground": "/assets/client-login/Newson%20Fam-1%20copy.jpg",
+  "clientLoginBackground": "/assets/client-login/Newson%20Fam-1%20copy-1-1.avif",
   "clients": [
     {
       "id": "client-sample",
-      "name": "Korea",
-      "username": "Korea",
+      "name": "Korea Newson",
+      "username": "korea",
       "password": "Cowboys20",
-      "galleryTitle": "Newsons",
-      "coverImage": "/assets/client-login/Newson%20Fam-1%20copy.jpg",
+      "galleryTitle": "Newson Famliy",
+      "coverImage": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871771749-801649c07e894999.jpg",
       "images": [
         {
-          "id": "client-image-0-tt202y",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906028771-81e064fce9ba091c.jpg",
-          "alt": "Client image 1"
-        },
-        {
-          "id": "client-image-1-dusohj",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906030277-108933a8a63e1403.jpg",
-          "alt": "Client image 2"
-        },
-        {
-          "id": "client-image-2-99y5uz",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906032045-74d8d189a5204d32.jpg",
+          "id": "client-image-0-m08gwg",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871790633-0971026278079af3.jpg",
           "alt": "Client image 3"
         },
         {
-          "id": "client-image-3-5hzhn7",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906033659-4cd01561b8e29e24.jpg",
+          "id": "client-image-1-msarz0",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871790711-e297ff7a83cf8fbc.jpg",
           "alt": "Client image 4"
         },
         {
-          "id": "client-image-4-re7zk8",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906041813-466577c4f39c8749.jpg",
+          "id": "client-image-2-9uokar",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871790870-6b539d3b70957337.jpg",
           "alt": "Client image 5"
         },
         {
-          "id": "client-image-5-vn06db",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906043505-8fc6bf9930670aaa.jpg",
+          "id": "client-image-3-2ijaul",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871790765-00a2798241d9bbd6.jpg",
           "alt": "Client image 6"
         },
         {
-          "id": "client-image-0-0hpgom",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906268737-a3a907b872b6aeb3.jpg",
+          "id": "client-image-4-z5692y",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871790920-13067e38bb5b2576.jpg",
           "alt": "Client image 7"
         },
         {
-          "id": "client-image-1-fkm8g4",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906270181-addd8a599d77252e.jpg",
+          "id": "client-image-5-j03v96",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871790980-0550847a07671500.jpg",
           "alt": "Client image 8"
         },
         {
-          "id": "client-image-2-isftdm",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906278387-617bc149925ed2c0.jpg",
+          "id": "client-image-6-1ya7u3",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871793219-66205ad676bac49b.jpg",
           "alt": "Client image 9"
         },
         {
-          "id": "client-image-3-z4didy",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906288250-865b173bf292f500.jpg",
+          "id": "client-image-7-e6msu4",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871793371-fecd002b770b75d9.jpg",
           "alt": "Client image 10"
         },
         {
-          "id": "client-image-4-8iweyl",
-          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784906289481-bfbf8ead9fcb83c7.jpg",
+          "id": "client-image-8-o8wkqe",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871793589-0a4411389e235ebd.jpg",
           "alt": "Client image 11"
+        },
+        {
+          "id": "client-image-9-bmtu0x",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871793677-eb282f7339160867.jpg",
+          "alt": "Client image 12"
+        },
+        {
+          "id": "client-image-10-924yuw",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871796548-04f3666e6d7d33c1.jpg",
+          "alt": "Client image 13"
+        },
+        {
+          "id": "client-image-11-b18n2y",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871796662-c64300ec5f25339d.jpg",
+          "alt": "Client image 14"
+        },
+        {
+          "id": "client-image-12-favsv5",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871797009-d8bd0ffea04e0a2d.jpg",
+          "alt": "Client image 15"
+        },
+        {
+          "id": "client-image-13-7m8gad",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871797128-1c4f978db5ad92f9.jpg",
+          "alt": "Client image 16"
+        },
+        {
+          "id": "client-image-14-1a2xep",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871799628-1dc53cbd2148a485.jpg",
+          "alt": "Client image 17"
+        },
+        {
+          "id": "client-image-15-t9t6s6",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871800018-5980b8bf82d078d0.jpg",
+          "alt": "Client image 18"
+        },
+        {
+          "id": "client-image-16-cz7hkb",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871800379-7e9f7c68ca324d91.jpg",
+          "alt": "Client image 19"
+        },
+        {
+          "id": "client-image-17-smrdfv",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871800488-8144f1bafb6ddb10.jpg",
+          "alt": "Client image 20"
+        },
+        {
+          "id": "client-image-18-yxajpp",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871802629-cf983db6fda58c9f.jpg",
+          "alt": "Client image 21"
+        },
+        {
+          "id": "client-image-19-10tal7",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871803074-a131b41d62e22150.jpg",
+          "alt": "Client image 22"
+        },
+        {
+          "id": "client-image-20-lv512n",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871803471-c7d581c507074828.jpg",
+          "alt": "Client image 23"
+        },
+        {
+          "id": "client-image-21-2y8rzy",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871803542-12eb6c7b34cb6b5a.jpg",
+          "alt": "Client image 24"
+        },
+        {
+          "id": "client-image-22-djesn5",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871803761-763b2409d61b57ce.jpg",
+          "alt": "Client image 25"
+        },
+        {
+          "id": "client-image-23-ysh8ll",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871803887-1bc3c4721412ba2e.jpg",
+          "alt": "Client image 26"
+        },
+        {
+          "id": "client-image-24-bh7p8y",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871805584-6f465fe37e91732f.jpg",
+          "alt": "Client image 27"
+        },
+        {
+          "id": "client-image-25-i6mq5s",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871806869-f011e13e11ca8d66.jpg",
+          "alt": "Client image 28"
+        },
+        {
+          "id": "client-image-26-wbb3au",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871807973-ad498f33f05f8e9b.jpg",
+          "alt": "Client image 29"
+        },
+        {
+          "id": "client-image-27-ol9wd4",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871808079-24af8d842be3ba4f.jpg",
+          "alt": "Client image 30"
+        },
+        {
+          "id": "client-image-28-l9t1yn",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871808250-ed393cdc8bdf9e33.jpg",
+          "alt": "Client image 31"
+        },
+        {
+          "id": "client-image-29-ioq8o4",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871808415-2555a564ea99f784.jpg",
+          "alt": "Client image 32"
+        },
+        {
+          "id": "client-image-30-p2fenq",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871808735-9c8858625f15c877.jpg",
+          "alt": "Client image 33"
+        },
+        {
+          "id": "client-image-31-s3fw0u",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871809498-a794944d7578415d.jpg",
+          "alt": "Client image 34"
+        },
+        {
+          "id": "client-image-32-rga6qn",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871812332-34174e32bd011bea.jpg",
+          "alt": "Client image 35"
+        },
+        {
+          "id": "client-image-33-0sbxlk",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871812626-3e19e5bb385d6845.jpg",
+          "alt": "Client image 36"
+        },
+        {
+          "id": "client-image-34-vrcic6",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871812450-78157dc0dd7982c8.jpg",
+          "alt": "Client image 37"
+        },
+        {
+          "id": "client-image-35-3pf6kp",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871812805-1fbd7a0480989d09.jpg",
+          "alt": "Client image 38"
+        },
+        {
+          "id": "client-image-36-hj9ql4",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871813473-0cdcf7f5f9fb22a3.jpg",
+          "alt": "Client image 39"
+        },
+        {
+          "id": "client-image-37-sh4pkx",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871813608-0dfd928f6ede07c4.jpg",
+          "alt": "Client image 40"
+        },
+        {
+          "id": "client-image-38-0hlfgl",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871816120-996b7b17d006098a.jpg",
+          "alt": "Client image 41"
+        },
+        {
+          "id": "client-image-39-fl38ig",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871817286-644fb0ba14d42e95.jpg",
+          "alt": "Client image 42"
+        },
+        {
+          "id": "client-image-40-mtbr50",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871817457-4c47c8507648f071.jpg",
+          "alt": "Client image 43"
+        },
+        {
+          "id": "client-image-41-2jka7s",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871818624-063a62f6b26561b1.jpg",
+          "alt": "Client image 44"
+        },
+        {
+          "id": "client-image-42-sl3lsk",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871818751-62e63f5b1c964a4f.jpg",
+          "alt": "Client image 45"
+        },
+        {
+          "id": "client-image-43-dj3te6",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871818855-e807e88156ff39ab.jpg",
+          "alt": "Client image 46"
+        },
+        {
+          "id": "client-image-44-6gg0uo",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871819725-01ea42bab5396435.jpg",
+          "alt": "Client image 47"
+        },
+        {
+          "id": "client-image-45-kpxivn",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871821980-28e38db980daa773.jpg",
+          "alt": "Client image 48"
+        },
+        {
+          "id": "client-image-46-c2xfc2",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871822229-1e17bd150aa514c2.jpg",
+          "alt": "Client image 49"
+        },
+        {
+          "id": "client-image-47-95js6f",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871823049-79e7f8e4d284a888.jpg",
+          "alt": "Client image 50"
+        },
+        {
+          "id": "client-image-48-cviac2",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871823633-572bcd0c161f05fb.jpg",
+          "alt": "Client image 51"
+        },
+        {
+          "id": "client-image-49-4yt6q9",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784871823826-422cbd0f5782a98d.jpg",
+          "alt": "Client image 52"
+        },
+        {
+          "id": "client-image-0-qp0li8",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872080680-eb3a6531371ff93d.jpg",
+          "alt": "Client image 51"
+        },
+        {
+          "id": "client-image-1-zwhkoz",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872090471-6d432bb127aa0f55.jpg",
+          "alt": "Client image 52"
+        },
+        {
+          "id": "client-image-2-dqx9mb",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872092070-85ecba537c1e7c5c.jpg",
+          "alt": "Client image 53"
+        },
+        {
+          "id": "client-image-3-godse1",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872093333-b26cacfee4c1b3b6.jpg",
+          "alt": "Client image 54"
+        },
+        {
+          "id": "client-image-4-2ek42m",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872102238-7ddce803006b7f75.jpg",
+          "alt": "Client image 55"
+        },
+        {
+          "id": "client-image-5-mfpbtj",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872103891-39ba9827cecf55a7.jpg",
+          "alt": "Client image 56"
+        },
+        {
+          "id": "client-image-6-aw1gt2",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872105698-130614a5a8779aef.jpg",
+          "alt": "Client image 57"
+        },
+        {
+          "id": "client-image-7-btfi34",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872107489-cc7821a94399585c.jpg",
+          "alt": "Client image 58"
+        },
+        {
+          "id": "client-image-8-5le5ie",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872109471-0690bf924191f9b1.jpg",
+          "alt": "Client image 59"
+        },
+        {
+          "id": "client-image-9-4b9y29",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872111252-075706e18637d603.jpg",
+          "alt": "Client image 60"
+        },
+        {
+          "id": "client-image-10-w0lp08",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872113148-d8e4b82a545b692e.jpg",
+          "alt": "Client image 61"
+        },
+        {
+          "id": "client-image-11-6n52ox",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872115615-cff70f05af1d156a.jpg",
+          "alt": "Client image 62"
+        },
+        {
+          "id": "client-image-0-dy3aln",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872193718-b0cb9fa98a0c0bfe.jpg",
+          "alt": "Client image 63"
+        },
+        {
+          "id": "client-image-1-0rf4kh",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872203728-a4b30b8b113fe7e9.jpg",
+          "alt": "Client image 64"
+        },
+        {
+          "id": "client-image-2-mwmy72",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872205424-c1de4938cfbff78c.jpg",
+          "alt": "Client image 65"
+        },
+        {
+          "id": "client-image-3-by7lb1",
+          "src": "https://54thelementphotography-media-800445863975-us-east-1-an.s3.us-east-1.amazonaws.com/uploads/1784872206925-41eee3e7a48b5bbc.jpg",
+          "alt": "Client image 66"
         }
       ]
     }

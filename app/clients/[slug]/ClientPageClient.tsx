@@ -7,6 +7,7 @@ import { Cormorant_Garamond } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { DEFAULT_CLIENT_COVER_IMAGE, type AdminClient } from "../../admin/content";
 import { clearClientSession, isClientSessionValid } from "../../lib/auth";
+import { IMAGE_SIZES } from "../../lib/image-sizes";
 import { toMediaSrc } from "../../lib/media";
 import ClientGallery from "../client-gallery";
 
@@ -85,7 +86,7 @@ export default function ClientPageClient({ client }: { client: AdminClient | nul
           fill
           className="h-full w-full object-cover"
           loading="eager"
-          sizes="100vw"
+          sizes={IMAGE_SIZES.FULL_BLEED}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/45" />
         <div className="absolute inset-0 flex items-center justify-center">

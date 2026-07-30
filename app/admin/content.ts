@@ -68,9 +68,9 @@ function localAssetPath(...segments: string[]) {
 
 export const SECTION_DEFAULT_IMAGE_SRC = {
   hero: [
-    localAssetPath("hero", "Kordaja Maternity-2.jpg"),
-    localAssetPath("hero", "Newson Fam-33.jpg"),
-    localAssetPath("hero", "Noah-4.jpg"),
+    localAssetPath("hero", "Kordaja Maternity-2-1.avif"),
+    localAssetPath("hero", "Newson Fam-33-3.avif"),
+    localAssetPath("hero", "Noah-4-1.avif"),
   ],
   homePortfolio: [
     localAssetPath("home-portfolio", "Korea Southaven-09.jpg"),

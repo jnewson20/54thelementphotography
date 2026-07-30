@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { DEFAULT_CLIENT_COVER_IMAGE, SECTION_DEFAULT_IMAGE_SRC, fetchContent, getDefaultContent, saveClientAuthSnapshot, saveContent, type AdminClient, type AdminImage, type AdminPageContent, type AdminPortfolioItem, type AdminServiceGroup } from "./content";
 import { clearAdminAuthentication, clearTemporaryAdminPassword, consumeTemporaryAdminPassword, isAdminAuthenticated, saveTemporaryAdminPassword, setAdminAuthenticated } from "../lib/auth";
+import { IMAGE_SIZES } from "../lib/image-sizes";
 import { toMediaSrc } from "../lib/media";
 
 const ADMIN_USERNAME = "admin";
@@ -174,7 +175,7 @@ function ImageEditor({ item, onChange, onRemove, onUpload }: { item: AdminImage;
         <button type="button" onClick={onRemove} className="rounded-full border border-[#071018]/10 px-3 py-1 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove</button>
       </div>
       <div className="mt-3 overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#f2e9d9]">
-        <PreviewImage src={item.src} alt={item.alt || ""} width={1200} height={360} className="h-36 w-full object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+        <PreviewImage src={item.src} alt={item.alt || ""} width={1200} height={360} className="h-36 w-full object-cover" sizes={IMAGE_SIZES.HALF} />
       </div>
       <div className="mt-3 space-y-2">
         <label className="block text-sm text-[#4d5561]">
@@ -1085,7 +1086,7 @@ export default function AdminPage() {
                   <input type="checkbox" checked={Boolean(selectedCarouselIds[slide.id])} onChange={() => toggleCarouselSelection(slide.id)} />
                   Select for delete
                 </label>
-                <PreviewImage src={slide.src} alt={slide.alt || ""} width={1200} height={440} className="h-44 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 50vw" eager={index === 0} />
+                <PreviewImage src={slide.src} alt={slide.alt || ""} width={1200} height={440} className="h-44 w-full rounded-2xl object-cover" sizes={IMAGE_SIZES.HALF} eager={index === 0} />
                 <div className="mt-3 space-y-2">
                   <div className="flex gap-2">
                     <button type="button" disabled={index === 0} onClick={() => moveCarouselSlide(index, index - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -1139,7 +1140,7 @@ export default function AdminPage() {
                 } bg-white/70 p-4`}
               >
                 <div className="mb-2 inline-block rounded-full bg-[#d8cbb1]/20 px-2 py-1 text-xs text-[#4d5561]">Position {index + 1}</div>
-                <PreviewImage src={item.src} alt={item.title} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 33vw" eager={index === 0} />
+                <PreviewImage src={item.src} alt={item.title} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes={IMAGE_SIZES.THIRD} eager={index === 0} />
                 <div className="mt-3 space-y-2">
                   <div className="flex gap-2">
                     <button type="button" disabled={index === 0} onClick={() => movePortfolioItem(index, index - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -1185,7 +1186,7 @@ export default function AdminPage() {
                         <input type="checkbox" checked={Boolean((selectedGalleryImageIds[group.key] || {})[image.id])} onChange={() => toggleGalleryImageSelection(group.key, image.id)} />
                         Select for delete
                       </label>
-                      <PreviewImage src={image.src} alt={image.alt || ""} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                      <PreviewImage src={image.src} alt={image.alt || ""} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes={IMAGE_SIZES.HALF} />
                       <div className="mt-3 space-y-2">
                         <div className="flex gap-2">
                           <button type="button" disabled={imageIndex === 0} onClick={() => moveGalleryImage(groupIndex, imageIndex, imageIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -1216,7 +1217,7 @@ export default function AdminPage() {
           </label>
           <button type="button" onClick={resetClientLoginBackground} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove upload</button>
           <div className="overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#071018]">
-            <PreviewImage src={content.clientLoginBackground} alt="Client login background" width={1400} height={560} className="h-56 w-full object-cover" sizes="100vw" eager />
+            <PreviewImage src={content.clientLoginBackground} alt="Client login background" width={1400} height={560} className="h-56 w-full object-cover" sizes={IMAGE_SIZES.FULL_BLEED} eager />
           </div>
         </SectionCard>
 
@@ -1253,7 +1254,7 @@ export default function AdminPage() {
                 <div className="mt-4 rounded-2xl border border-[#d8cbb1]/40 bg-white/70 p-4">
                   <p className="text-sm font-medium text-[#4d5561]">Client cover image</p>
                   <div className="mt-2 overflow-hidden rounded-2xl border border-[#d8cbb1]/30 bg-[#071018]">
-                    <PreviewImage src={client.coverImage || DEFAULT_CLIENT_COVER_IMAGE} alt={`${client.name} cover`} width={1200} height={400} className="h-40 w-full object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                    <PreviewImage src={client.coverImage || DEFAULT_CLIENT_COVER_IMAGE} alt={`${client.name} cover`} width={1200} height={400} className="h-40 w-full object-cover" sizes={IMAGE_SIZES.HALF} />
                   </div>
                   <label className="mt-3 block text-sm text-[#4d5561]">
                     Upload cover image
@@ -1281,7 +1282,7 @@ export default function AdminPage() {
                         <input type="checkbox" checked={Boolean((selectedClientImageIds[client.id] || {})[image.id])} onChange={() => toggleClientImageSelection(client.id, image.id)} />
                         Select for delete
                       </label>
-                      <PreviewImage src={image.src} alt={image.alt || ""} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
+                      <PreviewImage src={image.src} alt={image.alt || ""} width={1200} height={400} className="h-40 w-full rounded-2xl object-cover" sizes={IMAGE_SIZES.HALF} />
                       <div className="mt-3 space-y-2">
                         <div className="flex gap-2">
                           <button type="button" disabled={imageIndex === 0} onClick={() => moveClientImage(clientIndex, imageIndex, imageIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
