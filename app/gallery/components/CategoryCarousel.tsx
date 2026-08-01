@@ -5,6 +5,7 @@ import { IMAGE_SIZES } from "../../lib/image-sizes";
 import { toMediaSrc } from "../../lib/media";
 
 type Slide = { src?: string | StaticImageData; alt?: string };
+const TRANSITION_MS = 900;
 
 export default function CategoryCarousel({
   slides,
@@ -21,6 +22,7 @@ export default function CategoryCarousel({
   const timer = useRef<number | null>(null);
   const activeRef = useRef(0);
   const rafRef = useRef<number | null>(null);
+  const rafRef2 = useRef<number | null>(null);
   const transitionTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -59,12 +61,16 @@ export default function CategoryCarousel({
     setActiveVisible(false);
     setPreviousVisible(true);
 
-    if (rafRef.current) {
-      window.cancelAnimationFrame(rafRef.current);
-    }
+    if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
+    if (rafRef2.current) window.cancelAnimationFrame(rafRef2.current);
+
+    // Two RAFs force an intermediate paint so opacity transitions run reliably in production builds.
     rafRef.current = window.requestAnimationFrame(() => {
-      setActiveVisible(true);
-      setPreviousVisible(false);
+      rafRef2.current = window.requestAnimationFrame(() => {
+        setActiveVisible(true);
+        setPreviousVisible(false);
+        rafRef2.current = null;
+      });
       rafRef.current = null;
     });
 
@@ -75,13 +81,16 @@ export default function CategoryCarousel({
       setIsTransitioning(false);
       setPrevActive(null);
       transitionTimeoutRef.current = null;
-    }, 920);
+    }, TRANSITION_MS + 80);
   }, [active]);
 
   useEffect(() => {
     return () => {
       if (rafRef.current) {
         window.cancelAnimationFrame(rafRef.current);
+      }
+      if (rafRef2.current) {
+        window.cancelAnimationFrame(rafRef2.current);
       }
       if (transitionTimeoutRef.current) {
         window.clearTimeout(transitionTimeoutRef.current);
@@ -102,7 +111,10 @@ export default function CategoryCarousel({
       <div className="relative min-h-[320px] w-full sm:min-h-[420px] md:min-h-[520px]">
         <div className="absolute inset-0 drop-shadow-md shadow-black" aria-hidden="true">
           {isTransitioning && previousSrc ? (
-            <div className={`absolute inset-0 transition-opacity duration-[900ms] ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
+            <div
+              className={`absolute inset-0 z-0 transition-opacity ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}
+              style={{ transitionDuration: `${TRANSITION_MS}ms` }}
+            >
               <Image
                 src={toMediaSrc(previousSrc)}
                 alt={previousSlide?.alt || ""}
@@ -116,7 +128,11 @@ export default function CategoryCarousel({
             </div>
           ) : null}
 
-          <div key={`slide-${active}`} className={`absolute inset-0 transition-opacity duration-[900ms] ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}>
+          <div
+            key={`slide-${active}`}
+            className={`absolute inset-0 z-10 transition-opacity ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}
+            style={{ transitionDuration: `${TRANSITION_MS}ms` }}
+          >
             {activeSrc ? (
               <Image
                 src={toMediaSrc(activeSrc)}

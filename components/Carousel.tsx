@@ -5,6 +5,7 @@ import { IMAGE_SIZES } from "../app/lib/image-sizes";
 import { toMediaSrc } from "../app/lib/media";
 
 type Slide = { src: string | StaticImageData; alt?: string };
+const TRANSITION_MS = 900;
 
 export default function Carousel({ slides = [], interval = 5000 }: { slides: Slide[]; interval?: number }) {
   const [index, setIndex] = useState(0);
@@ -15,6 +16,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
   const timer = useRef<number | null>(null);
   const indexRef = useRef(0);
   const rafRef = useRef<number | null>(null);
+  const rafRef2 = useRef<number | null>(null);
   const transitionTimeoutRef = useRef<number | null>(null);
   const activeSlide = slides[index];
 
@@ -54,12 +56,16 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
     setActiveVisible(false);
     setPreviousVisible(true);
 
-    if (rafRef.current) {
-      window.cancelAnimationFrame(rafRef.current);
-    }
+    if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
+    if (rafRef2.current) window.cancelAnimationFrame(rafRef2.current);
+
+    // Two RAFs force an intermediate paint so opacity transitions run reliably in production builds.
     rafRef.current = window.requestAnimationFrame(() => {
-      setActiveVisible(true);
-      setPreviousVisible(false);
+      rafRef2.current = window.requestAnimationFrame(() => {
+        setActiveVisible(true);
+        setPreviousVisible(false);
+        rafRef2.current = null;
+      });
       rafRef.current = null;
     });
 
@@ -70,13 +76,16 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
       setIsTransitioning(false);
       setPrevIndex(null);
       transitionTimeoutRef.current = null;
-    }, 920);
+    }, TRANSITION_MS + 80);
   }, [index]);
 
   useEffect(() => {
     return () => {
       if (rafRef.current) {
         window.cancelAnimationFrame(rafRef.current);
+      }
+      if (rafRef2.current) {
+        window.cancelAnimationFrame(rafRef2.current);
       }
       if (transitionTimeoutRef.current) {
         window.clearTimeout(transitionTimeoutRef.current);
@@ -87,7 +96,10 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
   return (
     <div className="absolute inset-0 -z-10" aria-hidden>
       {isTransitioning && prevIndex !== null && slides[prevIndex] ? (
-        <div className={`absolute inset-0 transition-opacity duration-[900ms] ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
+        <div
+          className={`absolute inset-0 z-0 transition-opacity ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}
+          style={{ transitionDuration: `${TRANSITION_MS}ms` }}
+        >
           <Image
             src={typeof slides[prevIndex].src === "string" ? toMediaSrc(slides[prevIndex].src) : slides[prevIndex].src}
             alt={slides[prevIndex].alt || `slide-${prevIndex}`}
@@ -105,7 +117,8 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
       {activeSlide ? (
         <div
           key={index}
-          className={`absolute inset-0 slide transition-opacity duration-[900ms] ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 z-10 transition-opacity ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}
+          style={{ transitionDuration: `${TRANSITION_MS}ms` }}
           role="img"
           aria-label={activeSlide.alt || `slide-${index}`}
         >
@@ -123,7 +136,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
         </div>
       ) : null}
 
-      <div className="absolute inset-0 bg-black/45 pointer-events-none" />
+      <div className="absolute inset-0 bg-black/30 pointer-events-none" />
     </div>
   );
 }
