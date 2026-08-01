@@ -24,8 +24,7 @@ export default function CategoryCarousel({
   const transitionTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced || slides.length <= 1) return;
+    if (slides.length <= 1) return;
 
     timer.current = window.setInterval(() => setActive((i) => (i + 1) % slides.length), interval);
     return () => {
@@ -103,7 +102,7 @@ export default function CategoryCarousel({
       <div className="relative min-h-[320px] w-full sm:min-h-[420px] md:min-h-[520px]">
         <div className="absolute inset-0 drop-shadow-md shadow-black" aria-hidden="true">
           {isTransitioning && previousSrc ? (
-            <div className={`absolute inset-0 transition-opacity duration-900 ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
+            <div className={`absolute inset-0 transition-opacity duration-[900ms] ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
               <Image
                 src={toMediaSrc(previousSrc)}
                 alt={previousSlide?.alt || ""}
@@ -117,7 +116,7 @@ export default function CategoryCarousel({
             </div>
           ) : null}
 
-          <div key={`slide-${active}`} className={`absolute inset-0 transition-opacity duration-900 ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}>
+          <div key={`slide-${active}`} className={`absolute inset-0 transition-opacity duration-[900ms] ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}>
             {activeSrc ? (
               <Image
                 src={toMediaSrc(activeSrc)}

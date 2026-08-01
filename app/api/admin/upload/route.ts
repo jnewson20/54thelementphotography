@@ -121,11 +121,9 @@ export async function POST(request: Request) {
     const arrayBuffer = await uploaded.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    if (typedSection === "client-gallery") {
-      if (!isS3Configured()) {
-        return NextResponse.json({ error: "S3 must be configured for client gallery uploads." }, { status: 500 });
-      }
-
+    // On serverless platforms (e.g. Vercel), local filesystem uploads are not durable.
+    // Prefer S3 for every section when configured so edits persist across deployments.
+    if (isS3Configured()) {
       try {
         const src = await uploadImageToS3(buffer, uploaded.type);
         if (!src) {
@@ -137,6 +135,10 @@ export async function POST(request: Request) {
         const message = error instanceof Error ? error.message : "Unknown S3 error.";
         return NextResponse.json({ error: `Unable to upload image to S3. ${message}` }, { status: 500 });
       }
+    }
+
+    if (typedSection === "client-gallery") {
+      return NextResponse.json({ error: "S3 must be configured for client gallery uploads." }, { status: 500 });
     }
 
     const src = await saveToAssetSection(buffer, uploaded.type, typedSection, uploaded.name);

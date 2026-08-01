@@ -19,8 +19,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
   const activeSlide = slides[index];
 
   useEffect(() => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced || slides.length <= 1) return;
+    if (slides.length <= 1) return;
 
     timer.current = window.setInterval(() => setIndex((i) => (i + 1) % slides.length), interval);
     return () => {
@@ -88,7 +87,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
   return (
     <div className="absolute inset-0 -z-10" aria-hidden>
       {isTransitioning && prevIndex !== null && slides[prevIndex] ? (
-        <div className={`absolute inset-0 transition-opacity duration-900 ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
+        <div className={`absolute inset-0 transition-opacity duration-[900ms] ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}>
           <Image
             src={typeof slides[prevIndex].src === "string" ? toMediaSrc(slides[prevIndex].src) : slides[prevIndex].src}
             alt={slides[prevIndex].alt || `slide-${prevIndex}`}
@@ -106,7 +105,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
       {activeSlide ? (
         <div
           key={index}
-          className={`absolute inset-0 slide transition-opacity duration-900 ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 slide transition-opacity duration-[900ms] ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}
           role="img"
           aria-label={activeSlide.alt || `slide-${index}`}
         >
@@ -124,7 +123,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
         </div>
       ) : null}
 
-      <div className="absolute inset-0 bg-black/80 -z-5 pointer-events-none" />
+      <div className="absolute inset-0 bg-black/45 pointer-events-none" />
     </div>
   );
 }

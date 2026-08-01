@@ -73,26 +73,26 @@ export const SECTION_DEFAULT_IMAGE_SRC = {
     localAssetPath("hero", "Noah-4-1.avif"),
   ],
   homePortfolio: [
-    localAssetPath("home-portfolio", "Korea Southaven-09.jpg"),
-    localAssetPath("home-portfolio", "Kyla  Mocha-26.jpg"),
-    localAssetPath("home-portfolio", "Newson Fam-43.jpg"),
+    localAssetPath("home-portfolio", "IMGL2816-1.avif"),
+    localAssetPath("home-portfolio", "Newson Fam-43-1.avif"),
+    localAssetPath("home-portfolio", "Kyla  Mocha-26-3-1.avif"),
   ],
   galleryPortrait: [
-    localAssetPath("gallery", "portrait", "JQ-38.jpg"),
-    localAssetPath("gallery", "portrait", "JQ-6.jpg"),
-    localAssetPath("gallery", "portrait", "Kordaja Maternity-2.jpg"),
+    localAssetPath("gallery", "portrait", "JQ-38-1-1.avif"),
+    localAssetPath("gallery", "portrait", "JQ-6-2-1.avif"),
+    localAssetPath("gallery", "portrait", "Kordaja Maternity-2-1-1.avif"),
   ],
   galleryWedding: [
-    localAssetPath("gallery", "wedding", "JQ Finals-9.jpg"),
-    localAssetPath("gallery", "wedding", "The Walker's-124.jpg"),
-    localAssetPath("gallery", "wedding", "The Walker's-346.jpg"),
+    localAssetPath("gallery", "wedding", "JQ Finals-9-1-1.avif"),
+    localAssetPath("gallery", "wedding", "The Walker's-124-3-1.avif"),
+    localAssetPath("gallery", "wedding", "The Walker's-346-2-1.avif"),
   ],
   galleryBranding: [
-    localAssetPath("gallery", "branding-media", "Du-16.jpg"),
-    localAssetPath("gallery", "branding-media", "Du-22.jpg"),
-    localAssetPath("gallery", "branding-media", "MSB-107.jpg"),
+    localAssetPath("gallery", "branding-media", "Du-16-2-1.avif"),
+    localAssetPath("gallery", "branding-media", "Du-22-1-1.avif"),
+    localAssetPath("gallery", "branding-media", "MSB-107-5-1.avif"),
   ],
-  clientLoginBackground: localAssetPath("client-login", "Newson Fam-1 copy.jpg"),
+  clientLoginBackground: localAssetPath("client-login", "Newson Fam-1 copy-1-1.avif"),
 };
 
 export const DEFAULT_CLIENT_COVER_IMAGE = SECTION_DEFAULT_IMAGE_SRC.clientLoginBackground;
