@@ -6,7 +6,6 @@ import Layout from "../components/Layout";
 import Carousel from "../components/Carousel";
 import LazyContactForm from "../components/LazyContactForm";
 import { type AdminPageContent } from "./admin/content";
-import { IMAGE_SIZES } from "./lib/image-sizes";
 import { toMediaSrc } from "./lib/media";
 
 export default function HomePageClient({ content }: { content: AdminPageContent }) {
@@ -64,10 +63,10 @@ export default function HomePageClient({ content }: { content: AdminPageContent 
       </section>
 
       <section id="work" className="container mt-12 cv-auto">
-        <h2 className=" mb-6 text-2xl font-semibold">Portfolio</h2>
+        <h2 data-reveal className="reveal mb-6 text-2xl font-semibold">Portfolio</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {portfolio.map((p, index) => (
-            <div key={p.id}  className="relative h-72 overflow-hidden rounded-[28px]" style={{ transitionDelay: `${index * 80}ms` }}>
+            <div key={p.id} data-reveal className="reveal group relative h-72 overflow-hidden rounded-[28px]" style={{ transitionDelay: `${index * 80}ms` }}>
               <div className="card-photo relative h-full w-full">
                 {p.src ? (
                   <Image
@@ -75,7 +74,7 @@ export default function HomePageClient({ content }: { content: AdminPageContent 
                     alt={p.title}
                     fill
                     className="h-full w-full object-cover"
-                    sizes={IMAGE_SIZES.THIRD}
+                    sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gray-200 text-xs text-gray-600">
@@ -108,7 +107,7 @@ export default function HomePageClient({ content }: { content: AdminPageContent 
               alt="Photographer portrait"
               fill
               className="h-full w-full object-cover"
-              sizes={IMAGE_SIZES.HALF}
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
 

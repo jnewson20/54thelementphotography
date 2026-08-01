@@ -76,9 +76,9 @@ export const SECTION_DEFAULT_IMAGE_SRC = {
     localAssetPath("hero", "Noah-4-1.avif"),
   ],
   homePortfolio: [
-    localAssetPath("home-portfolio", "Korea Southaven-09-2.avif"),
-    localAssetPath("home-portfolio", "Kyla  Mocha-26-3-1.avif"),
-    localAssetPath("home-portfolio", "Newson Fam-43-1.avif"),
+    localAssetPath("home-portfolio", "hp1.avif"),
+    localAssetPath("home-portfolio", "hp2.avif"),
+    localAssetPath("home-portfolio", "hp3.avif"),
   ],
   galleryPortrait: [
     localAssetPath("gallery", "portrait", "JQ-38-1-1.avif"),
