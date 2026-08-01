@@ -20,6 +20,7 @@ function sanitizePortfolio(
       id: candidate?.id || base.id,
       title: candidate?.title || base.title,
       src: typeof candidate?.src === "string" && candidate.src.trim() ? candidate.src : base.src,
+      originalKey: typeof candidate?.originalKey === "string" ? candidate.originalKey : base.originalKey,
     };
   });
 }
@@ -36,6 +37,7 @@ function sanitizeClients(incoming: Partial<AdminClient>[] | undefined, fallback:
       password: client?.password || base.password,
       galleryTitle: client?.galleryTitle || base.galleryTitle || client?.name || base.name,
       coverImage: client?.coverImage || base.coverImage || getDefaultContent().clientLoginBackground,
+      coverImageOriginalKey: client?.coverImageOriginalKey || base.coverImageOriginalKey,
       images: Array.isArray(client?.images) ? client.images : Array.isArray(base.images) ? base.images : [],
     };
   });

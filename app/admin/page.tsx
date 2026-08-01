@@ -37,7 +37,7 @@ async function uploadImageFileWithProgress(file: File, section: UploadSection, o
   formData.append("file", file);
   formData.append("section", section);
 
-  return new Promise<{ src: string; warning?: string }>((resolve, reject) => {
+  return new Promise<{ src: string; originalKey?: string; warning?: string }>((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open("POST", "/api/admin/upload");
 
@@ -57,13 +57,13 @@ async function uploadImageFileWithProgress(file: File, section: UploadSection, o
         payload = null;
       }
 
-      const typed = payload as { src?: string; error?: string; warning?: string } | null;
+          const typed = payload as { src?: string; originalKey?: string; error?: string; warning?: string } | null;
       if (request.status < 200 || request.status >= 300 || !typed?.src) {
         reject(new Error(typed?.error || "Unable to upload image."));
         return;
       }
 
-      resolve({ src: typed.src, warning: typed.warning });
+      resolve({ src: typed.src, originalKey: typed.originalKey, warning: typed.warning });
     };
 
     request.send(formData);
@@ -140,7 +140,7 @@ function defaultGallerySrcForGroup(groupKey: string) {
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-[24px] border border-[#d8cbb1]/30 bg-[#f9f3e6]/90 p-6 shadow-[0_20px_50px_rgba(7,16,24,0.08)]">
+    <section className="rounded-3xl border border-[#d8cbb1]/30 bg-[#f9f3e6]/90 p-6 shadow-[0_20px_50px_rgba(7,16,24,0.08)]">
       <h2 className="text-xl font-semibold text-[#071018]">{title}</h2>
       <div className="mt-4 space-y-4">{children}</div>
     </section>
@@ -696,7 +696,7 @@ export default function AdminPage() {
       uploadStatRef.current = { lastLoaded: 0, lastAt: startedAt, speedBps: 0 };
       setUploadProgress({ label: `${uploadMeta.label}: uploading ${items.length} image${items.length === 1 ? "" : "s"}...`, loaded: 0, total: totalBytes, startedAt, speedBps: 0, etaSeconds: null });
 
-      const uploads: Array<{ src: string; warning?: string }> = [];
+      const uploads: Array<{ src: string; originalKey?: string; warning?: string }> = [];
       let completedBytes = 0;
       for (const file of items) {
         const result = await uploadImageFileWithProgress(file, uploadMeta.apiSection, (loaded, total) => {
@@ -764,7 +764,7 @@ export default function AdminPage() {
         ...next[clientIndex],
         images: [
           ...next[clientIndex].images,
-          ...uploads.map((entry, index) => ({ id: createId(`client-image-${index}`), src: entry.src, alt: `Client image ${next[clientIndex].images.length + index + 1}` })),
+          ...uploads.map((entry, index) => ({ id: createId(`client-image-${index}`), src: entry.src, originalKey: entry.originalKey, alt: `Client image ${next[clientIndex].images.length + index + 1}` })),
         ],
       };
       updateClients(next);
@@ -868,18 +868,19 @@ export default function AdminPage() {
         setMessage(uploaded.warning);
       }
       const dataUrl = uploaded.src;
+      const originalKey = uploaded.originalKey;
 
       if (target === "carousel") {
         const next = [...content.homeCarousel];
         removeManagedImages([next[index ?? 0]?.src]);
-        next[index ?? 0] = { ...next[index ?? 0], src: dataUrl };
+        next[index ?? 0] = { ...next[index ?? 0], src: dataUrl, originalKey };
         updateHomeCarousel(next);
         return;
       }
       if (target === "portfolio") {
         const next = [...content.homePortfolio];
         removeManagedImages([next[index ?? 0]?.src]);
-        next[index ?? 0] = { ...next[index ?? 0], src: dataUrl };
+        next[index ?? 0] = { ...next[index ?? 0], src: dataUrl, originalKey };
         updatePortfolio(next);
         return;
       }
@@ -894,7 +895,7 @@ export default function AdminPage() {
         removeManagedImages([previous]);
         next[clientIndex ?? 0] = {
           ...next[clientIndex ?? 0],
-          images: next[clientIndex ?? 0].images.map((img, imgIndex) => (imgIndex === index ? { ...img, src: dataUrl } : img)),
+          images: next[clientIndex ?? 0].images.map((img, imgIndex) => (imgIndex === index ? { ...img, src: dataUrl, originalKey } : img)),
         };
         updateClients(next);
         return;
@@ -905,6 +906,7 @@ export default function AdminPage() {
         next[clientIndex ?? 0] = {
           ...next[clientIndex ?? 0],
           coverImage: dataUrl,
+          coverImageOriginalKey: originalKey,
         };
         updateClients(next);
         return;
@@ -915,7 +917,7 @@ export default function AdminPage() {
         removeManagedImages([previous]);
         next[groupIndex ?? 0] = {
           ...next[groupIndex ?? 0],
-          images: next[groupIndex ?? 0].images.map((img, imgIndex) => (imgIndex === index ? { ...img, src: dataUrl } : img)),
+          images: next[groupIndex ?? 0].images.map((img, imgIndex) => (imgIndex === index ? { ...img, src: dataUrl, originalKey } : img)),
         };
         updateGallery(next);
         return;

@@ -21,6 +21,16 @@ export default async function ClientPage({ params }: { params: Promise<{ slug?: 
   const normalizedSlug = normalizeSlugValue(slug);
   const content = await loadContentServer();
   const client = content.clients.find((entry) => normalizeSlugValue(entry.username) === normalizedSlug) ?? null;
+  const publicClient = client
+    ? {
+        id: client.id,
+        name: client.name,
+        username: client.username,
+        galleryTitle: client.galleryTitle,
+        coverImage: client.coverImage,
+        images: client.images.map(({ id, src, alt }) => ({ id, src, alt })),
+      }
+    : null;
 
-  return <ClientPageClient client={client} />;
+  return <ClientPageClient client={publicClient} />;
 }

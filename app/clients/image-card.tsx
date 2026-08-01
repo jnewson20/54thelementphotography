@@ -5,6 +5,7 @@ import { IMAGE_SIZES } from "../lib/image-sizes";
 import { toMediaSrc } from "../lib/media";
 
 type ImageCardProps = {
+  imageId: string;
   src: string;
   alt?: string;
   selected?: boolean;
@@ -12,11 +13,8 @@ type ImageCardProps = {
   onOpen?: () => void;
 };
 
-export default function ImageCard({ src, alt, selected = false, onSelect, onOpen }: ImageCardProps) {
-  const filename = src.split("/").pop() || "image.jpg";
-
-  // Secure download route (streams file from server, recommended for protected galleries)
-  const secureDownloadHref = `/api/download?file=${encodeURIComponent(src)}`;
+export default function ImageCard({ imageId, src, alt, selected = false, onSelect, onOpen }: ImageCardProps) {
+  const secureDownloadHref = `/api/download?imageId=${encodeURIComponent(imageId)}`;
 
   return (
     <div className={`relative group overflow-hidden border border-white/10 bg-white/5 transition-shadow duration-300 ${selected ? "ring-2 ring-accent/40 shadow-2xl" : "hover:shadow-2xl"}`}>
@@ -51,6 +49,15 @@ export default function ImageCard({ src, alt, selected = false, onSelect, onOpen
         />
         <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-white/30 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </button>
+
+      <div className="absolute bottom-3 right-3 z-20">
+        <a
+          href={secureDownloadHref}
+          className="inline-flex items-center rounded-full border border-white/15 bg-black/45 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/60"
+        >
+          Download
+        </a>
+      </div>
     </div>
   );
 }

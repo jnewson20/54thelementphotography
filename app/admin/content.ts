@@ -2,12 +2,14 @@ export type AdminImage = {
   id: string;
   src: string;
   alt: string;
+  originalKey?: string;
 };
 
 export type AdminPortfolioItem = {
   id: string;
   title: string;
   src: string;
+  originalKey?: string;
 };
 
 export type AdminServicePackage = {
@@ -37,6 +39,7 @@ export type AdminClient = {
   password: string;
   galleryTitle: string;
   coverImage: string;
+  coverImageOriginalKey?: string;
   images: AdminImage[];
 };
 
@@ -104,6 +107,7 @@ type ClientAuthSnapshot = {
   password: string;
   galleryTitle: string;
   coverImage: string;
+  coverImageOriginalKey?: string;
 };
 
 function isValidImageSrc(src: unknown): src is string {
@@ -126,6 +130,7 @@ function sanitizePortfolio(
       id: candidate?.id || base.id,
       title: candidate?.title || base.title,
       src: isValidImageSrc(candidate?.src) ? candidate.src : base.src,
+      originalKey: typeof candidate?.originalKey === "string" ? candidate.originalKey : base.originalKey,
     };
   });
 
@@ -140,6 +145,7 @@ function toClientAuthSnapshot(clients: AdminClient[]): ClientAuthSnapshot[] {
     password: client.password,
     galleryTitle: client.galleryTitle,
     coverImage: client.coverImage || DEFAULT_CLIENT_COVER_IMAGE,
+    coverImageOriginalKey: client.coverImageOriginalKey || undefined,
   }));
 }
 
@@ -178,6 +184,7 @@ function mergeClientsWithAuth(baseClients: AdminClient[], authClients: ClientAut
           password: authClient.password || existing.password,
           galleryTitle: authClient.galleryTitle || existing.galleryTitle,
           coverImage: authClient.coverImage || existing.coverImage,
+          coverImageOriginalKey: authClient.coverImageOriginalKey || existing.coverImageOriginalKey,
         };
       }
     } else {
@@ -188,6 +195,7 @@ function mergeClientsWithAuth(baseClients: AdminClient[], authClients: ClientAut
         password: authClient.password,
         galleryTitle: authClient.galleryTitle || authClient.name,
         coverImage: authClient.coverImage || DEFAULT_CLIENT_COVER_IMAGE,
+        coverImageOriginalKey: authClient.coverImageOriginalKey || undefined,
         images: [],
       });
     }

@@ -9,10 +9,9 @@ import { toMediaSrc } from "../../lib/media";
 
 type ClientLoginClientProps = {
   background: string;
-  clients: Array<{ username: string; password: string }>;
 };
 
-export default function ClientLoginClient({ background, clients }: ClientLoginClientProps) {
+export default function ClientLoginClient({ background }: ClientLoginClientProps) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -24,21 +23,28 @@ export default function ClientLoginClient({ background, clients }: ClientLoginCl
     setErr(null);
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 600));
+    try {
+      const response = await fetch("/api/client/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    const normalizedUsername = username.trim().toLowerCase();
-    const normalizedPassword = password.trim();
+      const payload = (await response.json().catch(() => null)) as { error?: string; username?: string } | null;
 
-    const user = clients.find((entry) => entry.username.trim().toLowerCase() === normalizedUsername);
-    if (!user || user.password.trim() !== normalizedPassword) {
-      setErr("Invalid username or password.");
+      if (!response.ok || !payload?.username) {
+        setErr(payload?.error || "Invalid username or password.");
+        return;
+      }
+
+      const canonicalUsername = payload.username.trim();
+      saveClientSession(canonicalUsername);
+      router.push(`/clients/${encodeURIComponent(canonicalUsername)}`);
+    } catch {
+      setErr("Unable to sign in right now.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const canonicalUsername = user.username.trim();
-    saveClientSession(canonicalUsername);
-    router.push(`/clients/${encodeURIComponent(canonicalUsername)}`);
   }
 
   return (

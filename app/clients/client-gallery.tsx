@@ -8,7 +8,7 @@ import { toMediaSrc } from "../lib/media";
 
 type ClientGalleryProps = {
   title?: string;
-  images: string[];
+  images: Array<{ id: string; src: string; alt: string }>;
 };
 
 export default function ClientGallery({ title, images }: ClientGalleryProps) {
@@ -17,9 +17,9 @@ export default function ClientGallery({ title, images }: ClientGalleryProps) {
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const currentImage = lightboxIndex !== null ? images[lightboxIndex] : null;
 
-  const toggleSelection = (src: string) => {
+  const toggleSelection = (id: string) => {
     setSelected((current) =>
-      current.includes(src) ? current.filter((item) => item !== src) : [...current, src]
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
     );
   };
 
@@ -34,7 +34,7 @@ export default function ClientGallery({ title, images }: ClientGalleryProps) {
       current === null ? null : current === images.length - 1 ? 0 : current + 1
     );
 
-  const selectAll = () => setSelected([...images]);
+  const selectAll = () => setSelected(images.map((image) => image.id));
   const clearSelection = () => setSelected([]);
 
   const [downloading, setDownloading] = useState(false);
@@ -49,7 +49,7 @@ export default function ClientGallery({ title, images }: ClientGalleryProps) {
       const response = await fetch("/api/download-zip", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ files: selected }),
+        body: JSON.stringify({ files: selected.map((id) => images.find((image) => image.id === id)?.src).filter((src): src is string => Boolean(src)) }),
       });
 
       if (!response.ok) {
@@ -111,11 +111,12 @@ export default function ClientGallery({ title, images }: ClientGalleryProps) {
       <div className="grid gap-0.5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         {images.map((src, index) => (
           <ImageCard
-            key={src}
-            src={src}
-            alt={`Client image ${index + 1}`}
-            selected={selectedSet.has(src)}
-            onSelect={() => toggleSelection(src)}
+            key={src.id}
+            imageId={src.id}
+            src={src.src}
+            alt={src.alt || `Client image ${index + 1}`}
+            selected={selectedSet.has(src.id)}
+            onSelect={() => toggleSelection(src.id)}
             onOpen={() => openLightbox(index)}
           />
         ))}
@@ -125,7 +126,7 @@ export default function ClientGallery({ title, images }: ClientGalleryProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-2xl sm:p-8">
           <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 transition-opacity duration-500 ease-out opacity-100">
-                  <Image src={toMediaSrc(currentImage)} alt="Backdrop image" fill className="object-cover" sizes={IMAGE_SIZES.FULL_BLEED} priority unoptimized quality={100} />
+                  <Image src={toMediaSrc(currentImage.src)} alt={currentImage.alt || "Backdrop image"} fill className="object-cover" sizes={IMAGE_SIZES.FULL_BLEED} priority unoptimized quality={100} />
                 </div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(7,16,24,0.08),transparent_45%),linear-gradient(135deg,rgba(252,249,242,0.82),rgba(239,226,201,0.35))]" />
               </div>
@@ -146,8 +147,8 @@ export default function ClientGallery({ title, images }: ClientGalleryProps) {
                 <div className="relative h-full w-full overflow-hidden ">
                   <div className="absolute inset-0 transition-opacity duration-500 ease-out opacity-100">
                     <Image
-                      src={toMediaSrc(currentImage)}
-                      alt={`Slide ${(lightboxIndex ?? 0) + 1}`}
+                      src={toMediaSrc(currentImage.src)}
+                      alt={currentImage.alt || `Slide ${(lightboxIndex ?? 0) + 1}`}
                       fill
                       sizes={IMAGE_SIZES.LIGHTBOX}
                       priority
@@ -176,7 +177,7 @@ export default function ClientGallery({ title, images }: ClientGalleryProps) {
                 →
               </button>
 
-              <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#071018]/10 bg-[#fcf9f2]/80 px-3 py-1.5 text-sm text-[#071018] shadow-sm">
+              <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#071018]/10 bg-bg/80 px-3 py-1.5 text-sm text-[#071018] shadow-sm">
                 {(lightboxIndex ?? 0) + 1} / {images.length}
               </div>
             </div>
