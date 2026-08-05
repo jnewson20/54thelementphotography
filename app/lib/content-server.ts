@@ -84,19 +84,33 @@ export async function loadContentServer(): Promise<AdminPageContent> {
 
 export async function saveContentServer(content: AdminPageContent): Promise<void> {
   const serialized = JSON.stringify(content, null, 2);
+  let persisted = false;
+  let lastError: Error | null = null;
 
   if (isS3Configured()) {
     try {
       await writeS3ContentObject(serialized);
+      persisted = true;
     } catch {
       // Continue to local write fallback.
+      lastError = new Error("Unable to write content to S3.");
     }
   }
 
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     await fs.writeFile(CONTENT_PATH, serialized, "utf8");
+    persisted = true;
   } catch {
-    // Ignore local write failures on read-only deployments.
+    // On read-only deployments this often fails, so rely on S3 when configured.
+    if (!lastError) {
+      lastError = new Error("Unable to write content to local storage.");
+    }
+  }
+
+  if (!persisted) {
+    throw new Error(
+      `${lastError?.message || "Unable to save content."} Configure S3 storage for production persistence.`
+    );
   }
 }

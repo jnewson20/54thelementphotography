@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
+export const runtime = 'nodejs';
+
+function pickEnv(...keys: string[]) {
+  for (const key of keys) {
+    const value = process.env[key]?.trim();
+    if (value) return value;
+  }
+  return '';
+}
+
 export async function POST(request: Request) {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const receiverEmail = process.env.CONTACT_RECEIVER_EMAIL?.trim();
-  const senderEmail = process.env.CONTACT_SENDER_EMAIL?.trim();
+  const apiKey = pickEnv('RESEND_API_KEY');
+  const receiverEmail = pickEnv('CONTACT_RECEIVER_EMAIL', 'RESEND_TO_EMAIL', 'RECEIVER_EMAIL');
+  const senderEmail = pickEnv('CONTACT_SENDER_EMAIL', 'RESEND_FROM_EMAIL', 'SENDER_EMAIL');
   const senderName = process.env.CONTACT_SENDER_NAME?.trim() || 'Contact Form';
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -46,30 +56,40 @@ export async function POST(request: Request) {
   const resend = new Resend(apiKey);
 
   try {
-    const { name, email, message, service } = await request.json();
+    const { name, email, phone, message, service } = await request.json();
+    const safeName = typeof name === 'string' ? name.trim() : '';
+    const safeEmail = typeof email === 'string' ? email.trim() : '';
+    const safePhone = typeof phone === 'string' ? phone.trim() : '';
+    const safeMessage = typeof message === 'string' ? message.trim() : '';
+    const safeService = typeof service === 'string' ? service.trim() : '';
 
-    // Basic server-side validation validation
-    if (!name || !email || !message) {
+    if (!safeName || !safeEmail || !safeMessage) {
       return NextResponse.json(
         { error: 'All fields are required.' },
         { status: 400 }
       );
     }
 
-    // Send email using Resend
+    if (!emailPattern.test(safeEmail)) {
+      return NextResponse.json(
+        { error: 'Please provide a valid email address.' },
+        { status: 400 }
+      );
+    }
+
     const fromHeader = `${senderName} <${senderEmail}>`;
-    const subject = service
-      ? `New Contact Form Submission for ${service} from ${name}`
-      : `New Contact Form Submission from ${name}`;
+    const subject = safeService
+      ? `New Contact Form Submission for ${safeService} from ${safeName}`
+      : `New Contact Form Submission from ${safeName}`;
 
     const data = await resend.emails.send({
       from: fromHeader,
       to: receiverEmail,
       subject,
-      text: `Name: ${name}\nEmail: ${email}\n${service ? `Service: ${service}\n\n` : ''}Message:\n${message}`,
+      replyTo: safeEmail,
+      text: `Name: ${safeName}\nEmail: ${safeEmail}\n${safePhone ? `Phone: ${safePhone}\n` : ''}${safeService ? `Service: ${safeService}\n\n` : ''}Message:\n${safeMessage}`,
     });
 
-    // Check if Resend returned an error in the response
     if (data.error) {
       console.error('Resend send error:', data.error);
       return NextResponse.json(

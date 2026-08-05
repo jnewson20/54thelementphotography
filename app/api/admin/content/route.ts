@@ -37,7 +37,8 @@ export async function POST(request: Request) {
     await saveContentServer(body.content);
 
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: "Unable to save content." }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to save content.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

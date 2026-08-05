@@ -62,7 +62,7 @@ export default function HomePageClient({ content }: { content: AdminPageContent 
         </div>
       </section>
 
-      <section id="work" className="container mt-12 cv-auto">
+      <section id="work" className="container mt-12 ">
         <h2 data-reveal className="reveal mb-6 text-2xl font-semibold">Portfolio</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {portfolio.map((p, index) => (
@@ -73,6 +73,7 @@ export default function HomePageClient({ content }: { content: AdminPageContent 
                     src={toMediaSrc(p.src)}
                     alt={p.title}
                     fill
+                    unoptimized
                     className="h-full w-full object-cover"
                     sizes="(max-width: 768px) 100vw, 33vw"
                   />
@@ -101,11 +102,12 @@ export default function HomePageClient({ content }: { content: AdminPageContent 
 
       <section id="about" className="container mt-12 mb-20 cv-auto">
         <div className="grid items-center gap-8 md:grid-cols-2">
-          <div data-reveal className="reveal relative h-80 overflow-hidden rounded-[32px] bg-[#071018] shadow-[0_24px_60px_rgba(7,16,24,0.16)] md:h-[520px]">
+          <div data-reveal className="reveal relative h-80 overflow-hidden rounded-[32px] shadow-[0_24px_60px_rgba(7,16,24,0.16)] md:h-[520px]">
             <Image
               src="/assets/about-1-1.avif"
               alt="Photographer portrait"
               fill
+              unoptimized
               className="h-full w-full object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
