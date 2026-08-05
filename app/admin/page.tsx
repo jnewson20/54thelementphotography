@@ -138,11 +138,31 @@ function defaultGallerySrcForGroup(groupKey: string) {
   return SECTION_DEFAULT_IMAGE_SRC.galleryBranding[0];
 }
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  title: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <section className="rounded-3xl border border-[#d8cbb1]/30 bg-[#f9f3e6]/90 p-6 shadow-[0_20px_50px_rgba(7,16,24,0.08)]">
-      <h2 className="text-xl font-semibold text-[#071018]">{title}</h2>
-      <div className="mt-4 space-y-4">{children}</div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <h2 className="text-xl font-semibold text-[#071018]">{title}</h2>
+        <span className="rounded-full border border-[#071018]/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#4d5561]">
+          {isOpen ? "−" : "+"}
+        </span>
+      </button>
+      {isOpen && <div className="mt-4 space-y-4">{children}</div>}
     </section>
   );
 }
@@ -210,6 +230,9 @@ export default function AdminPage() {
   const [showProgressPanel, setShowProgressPanel] = useState(false);
   const [fadeProgressPanel, setFadeProgressPanel] = useState(false);
   const [uploadElapsedMs, setUploadElapsedMs] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveStatusText, setSaveStatusText] = useState("No pending changes.");
+  const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>({});
   const uploadStatRef = useRef<{ lastLoaded: number; lastAt: number; speedBps: number }>({
     lastLoaded: 0,
     lastAt: 0,
@@ -218,6 +241,58 @@ export default function AdminPage() {
   const progressFadeTimeoutRef = useRef<number | null>(null);
   const progressHideTimeoutRef = useRef<number | null>(null);
   const hasHydratedContent = useRef(false);
+  const queuedSaveRef = useRef<AdminPageContent | null>(null);
+  const saveWorkerRef = useRef<Promise<void> | null>(null);
+  const lastSaveErrorRef = useRef<string | null>(null);
+
+  const isExpanded = (key: string) => collapsedMap[key] === true;
+
+  const toggleExpanded = (key: string) => {
+    setCollapsedMap((current) => ({
+      ...current,
+      [key]: !isExpanded(key),
+    }));
+  };
+
+  const startSaveWorker = () => {
+    if (saveWorkerRef.current) {
+      return saveWorkerRef.current;
+    }
+
+    saveWorkerRef.current = (async () => {
+      while (queuedSaveRef.current) {
+        const snapshot = queuedSaveRef.current;
+        queuedSaveRef.current = null;
+
+        setSaveStatus("saving");
+        setSaveStatusText("Saving changes...");
+
+        try {
+          await saveContent(snapshot);
+          lastSaveErrorRef.current = null;
+          setSaveStatus("saved");
+          setSaveStatusText("All changes saved.");
+        } catch (error) {
+          const text = error instanceof Error ? error.message : "Unable to save changes.";
+          lastSaveErrorRef.current = text;
+          setSaveStatus("error");
+          setSaveStatusText(text);
+        }
+      }
+    })().finally(() => {
+      saveWorkerRef.current = null;
+      if (queuedSaveRef.current) {
+        void startSaveWorker();
+      }
+    });
+
+    return saveWorkerRef.current;
+  };
+
+  const queueSave = (nextContent: AdminPageContent) => {
+    queuedSaveRef.current = nextContent;
+    void startSaveWorker();
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -235,7 +310,7 @@ export default function AdminPage() {
     if (!hasHydratedContent.current) return;
 
     const timer = window.setTimeout(() => {
-      void saveContent(content).catch(() => null);
+      queueSave(content);
     }, 450);
 
     return () => window.clearTimeout(timer);
@@ -344,14 +419,22 @@ export default function AdminPage() {
   };
 
   const saveCurrentContent = async () => {
-    try {
-      await saveContent(content);
-      setMessage("Changes saved on site.");
-      setShowSaveToast(true);
-      window.setTimeout(() => setShowSaveToast(false), 1800);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to save changes.");
+    queueSave(content);
+
+    do {
+      const activeSave = saveWorkerRef.current;
+      if (!activeSave) break;
+      await activeSave;
+    } while (saveWorkerRef.current);
+
+    if (lastSaveErrorRef.current) {
+      setMessage(lastSaveErrorRef.current);
+      return;
     }
+
+    setMessage("Changes saved on site.");
+    setShowSaveToast(true);
+    window.setTimeout(() => setShowSaveToast(false), 1800);
   };
 
   const updateHomeCarousel = (next: AdminImage[]) => {
@@ -1063,6 +1146,20 @@ export default function AdminPage() {
               <p className="text-sm uppercase tracking-[0.3em] text-[#9aa6b2]">Administrator</p>
               <h1 className="mt-2 text-3xl font-semibold">Manage the photography site</h1>
               <p className="mt-2 text-sm text-[#c9d5dc]">{previewSummary}</p>
+              <p
+                className={`mt-2 text-sm ${
+                  saveStatus === "error"
+                    ? "text-[#ffb4b4]"
+                    : saveStatus === "saving"
+                      ? "text-[#f2ddb3]"
+                      : "text-[#b7e8c8]"
+                }`}
+              >
+                {saveStatusText}
+              </p>
+              {message && message !== "Manage the site content below." && (
+                <p className="mt-2 text-sm text-[#f0d9ae]">{message}</p>
+              )}
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={saveCurrentContent} className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20">Save changes</button>
@@ -1071,7 +1168,7 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <SectionCard title="Main page carousel">
+        <SectionCard title="Main page carousel" isOpen={isExpanded("section:carousel")} onToggle={() => toggleExpanded("section:carousel")}>
           <div className="flex items-center justify-between">
             <p className="text-sm text-[#5f5d58]">Add, remove, or replace slides shown on the homepage hero.</p>
             <div className="flex gap-2">
@@ -1109,7 +1206,7 @@ export default function AdminPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Homepage portfolio cards">
+        <SectionCard title="Homepage portfolio cards" isOpen={isExpanded("section:portfolio")} onToggle={() => toggleExpanded("section:portfolio")}>
           <div className="flex items-center justify-between">
             <p className="text-sm text-[#5f5d58]">Exactly 3 cards shown under the hero section. Drag to reorder.</p>
             {content.homePortfolio.length < 3 && (
@@ -1162,17 +1259,24 @@ export default function AdminPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Gallery categories">
+        <SectionCard title="Gallery categories" isOpen={isExpanded("section:gallery")} onToggle={() => toggleExpanded("section:gallery")}>
           <p className="text-sm text-[#5f5d58]">Update each category title and its gallery images.</p>
           <div className="space-y-6">
-            {content.gallery.map((group, groupIndex) => (
+            {content.gallery.map((group, groupIndex) => {
+              const galleryGroupKey = `gallery:${group.key}`;
+              const galleryGroupOpen = isExpanded(galleryGroupKey);
+
+              return (
               <div key={group.key} className="rounded-[22px] border border-[#d8cbb1]/30 bg-[#f7f1e4] p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold text-[#071018]">{group.title}</h3>
                     <p className="text-sm text-[#5f5d58]">Category key: {group.key}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button type="button" onClick={() => toggleExpanded(galleryGroupKey)} className="rounded-full border border-[#071018]/10 px-3 py-2 text-xs">
+                      {galleryGroupOpen ? "−" : "+"}
+                    </button>
                     <button type="button" disabled={groupIndex === 0} onClick={() => moveGalleryGroup(groupIndex, groupIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-2 text-xs disabled:opacity-40">Up</button>
                     <button type="button" disabled={groupIndex === content.gallery.length - 1} onClick={() => moveGalleryGroup(groupIndex, groupIndex + 1)} className="rounded-full border border-[#071018]/10 px-3 py-2 text-xs disabled:opacity-40">Down</button>
                     <button type="button" onClick={() => addGalleryImage(groupIndex)} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm font-medium text-[#071018] transition hover:bg-[#071018] hover:text-white">Add image</button>
@@ -1181,6 +1285,7 @@ export default function AdminPage() {
                     <button type="button" onClick={() => deleteSelectedGalleryImages(groupIndex)} disabled={Object.values(selectedGalleryImageIds[group.key] || {}).filter(Boolean).length === 0} className="rounded-full border border-[#071018]/10 px-3 py-2 text-xs disabled:opacity-40">Delete selected</button>
                   </div>
                 </div>
+                {galleryGroupOpen && (
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   {group.images.map((image, imageIndex) => (
                     <div key={image.id} className="rounded-2xl border border-[#d8cbb1]/40 bg-white/70 p-4">
@@ -1207,12 +1312,13 @@ export default function AdminPage() {
                     </div>
                   ))}
                 </div>
+                )}
               </div>
-            ))}
+            );})}
           </div>
         </SectionCard>
 
-        <SectionCard title="Client login background">
+        <SectionCard title="Client login background" isOpen={isExpanded("section:client-bg")} onToggle={() => toggleExpanded("section:client-bg")}>
           <label className="block text-sm text-[#4d5561]">
             Upload new background image
             <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "background")} className="mt-1 w-full rounded-xl border border-dashed border-[#d8cbb1]/70 bg-white px-3 py-2 text-sm" />
@@ -1223,18 +1329,30 @@ export default function AdminPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Client galleries">
+        <SectionCard title="Client galleries" isOpen={isExpanded("section:clients")} onToggle={() => toggleExpanded("section:clients")}>
           <div className="flex items-center justify-between">
             <p className="text-sm text-[#5f5d58]">Create client credentials, set a client title, and manage their private gallery images.</p>
             <button type="button" onClick={addClient} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm font-medium text-[#071018] transition hover:bg-[#071018] hover:text-white">Add client</button>
           </div>
           <div className="space-y-6">
-            {content.clients.map((client, clientIndex) => (
+            {content.clients.map((client, clientIndex) => {
+              const clientSectionKey = `client:${client.id}`;
+              const clientSectionOpen = isExpanded(clientSectionKey);
+
+              return (
               <div key={client.id} className="rounded-[22px] border border-[#d8cbb1]/30 bg-[#f7f1e4] p-4">
-                <div className="mb-3 flex gap-2">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <p className="mr-2 text-sm font-semibold text-[#071018]">
+                    {client.name || "Unnamed client"}
+                  </p>
+                  <button type="button" onClick={() => toggleExpanded(clientSectionKey)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs">
+                    {clientSectionOpen ? "−" : "+"}
+                  </button>
                   <button type="button" disabled={clientIndex === 0} onClick={() => moveClient(clientIndex, clientIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Move client up</button>
                   <button type="button" disabled={clientIndex === content.clients.length - 1} onClick={() => moveClient(clientIndex, clientIndex + 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Move client down</button>
                 </div>
+                {clientSectionOpen && (
+                <>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="block text-sm text-[#4d5561]">
                     Client name
@@ -1303,23 +1421,37 @@ export default function AdminPage() {
                     </div>
                   ))}
                 </div>
+                </>
+                )}
               </div>
-            ))}
+            );})}
           </div>
         </SectionCard>
 
-        <SectionCard title="Services and package cards">
+        <SectionCard title="Services and package cards" isOpen={isExpanded("section:services")} onToggle={() => toggleExpanded("section:services")}>
           <div className="flex items-center justify-between">
             <p className="text-sm text-[#5f5d58]">Edit service categories, package cards, and the button links on the services page.</p>
             <button type="button" onClick={addServiceGroup} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm font-medium text-[#071018] transition hover:bg-[#071018] hover:text-white">Add service group</button>
           </div>
           <div className="space-y-6">
-            {content.services.map((group, groupIndex) => (
+            {content.services.map((group, groupIndex) => {
+              const serviceGroupKey = `service-group:${group.key}`;
+              const serviceGroupOpen = isExpanded(serviceGroupKey);
+
+              return (
               <div key={group.key} className="rounded-[22px] border border-[#d8cbb1]/30 bg-[#f7f1e4] p-4">
-                <div className="mb-3 flex gap-2">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <p className="mr-2 text-sm font-semibold text-[#071018]">
+                    {group.title || "Untitled group"}
+                  </p>
+                  <button type="button" onClick={() => toggleExpanded(serviceGroupKey)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs">
+                    {serviceGroupOpen ? "−" : "+"}
+                  </button>
                   <button type="button" disabled={groupIndex === 0} onClick={() => moveServiceGroup(groupIndex, groupIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Move group up</button>
                   <button type="button" disabled={groupIndex === content.services.length - 1} onClick={() => moveServiceGroup(groupIndex, groupIndex + 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Move group down</button>
                 </div>
+                {serviceGroupOpen && (
+                <>
                 <div className="space-y-2">
                   <label className="block text-sm text-[#4d5561]">
                     Group title
@@ -1334,6 +1466,17 @@ export default function AdminPage() {
                 <div className="mt-4 grid gap-4 lg:grid-cols-2">
                   {group.packages.map((pkg, pkgIndex) => (
                     <div key={pkg.id} className="rounded-2xl border border-[#d8cbb1]/40 bg-white/70 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <p className="text-sm font-semibold text-[#071018]">{pkg.title || "Package"}</p>
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(`service-package:${group.key}:${pkg.id}`)}
+                          className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs"
+                        >
+                          {isExpanded(`service-package:${group.key}:${pkg.id}`) ? "−" : "+"}
+                        </button>
+                      </div>
+                      {isExpanded(`service-package:${group.key}:${pkg.id}`) && (
                       <div className="space-y-2">
                         <div className="flex gap-2">
                           <button type="button" disabled={pkgIndex === 0} onClick={() => moveServicePackage(groupIndex, pkgIndex, pkgIndex - 1)} className="rounded-full border border-[#071018]/10 px-3 py-1 text-xs disabled:opacity-40">Up</button>
@@ -1377,11 +1520,14 @@ export default function AdminPage() {
                         </label>
                         <button type="button" onClick={() => { const next = [...content.services]; next[groupIndex] = { ...next[groupIndex], packages: next[groupIndex].packages.filter((entry) => entry.id !== pkg.id) }; updateServices(next); }} className="rounded-full border border-[#071018]/10 px-3 py-2 text-sm text-[#071018] transition hover:bg-[#071018] hover:text-white">Remove package</button>
                       </div>
+                      )}
                     </div>
                   ))}
                 </div>
+                </>
+                )}
               </div>
-            ))}
+            );})}
           </div>
         </SectionCard>
       </div>
