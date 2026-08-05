@@ -12,7 +12,7 @@ function pickEnv(...keys: string[]) {
 }
 
 export async function POST(request: Request) {
-  const apiKey = pickEnv('RESEND_API_KEY');
+  const apiKey = pickEnv('contact_RESEND_API_KEY');
   const receiverEmail = pickEnv('CONTACT_RECEIVER_EMAIL', 'RESEND_TO_EMAIL', 'RECEIVER_EMAIL');
   const senderEmail = pickEnv('CONTACT_SENDER_EMAIL', 'RESEND_FROM_EMAIL', 'SENDER_EMAIL');
   const senderName = process.env.CONTACT_SENDER_NAME?.trim() || 'Contact Form';
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'Missing RESEND_API_KEY environment variable.' },
+      { error: 'Missing contact_RESEND_API_KEY environment variable.' },
       { status: 500 }
     );
   }
@@ -102,10 +102,11 @@ export async function POST(request: Request) {
       { success: true, message: 'Thank you for your inquiry! Will hear from us soon!', data },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Something went wrong.';
     console.error('Contact API error:', error);
     return NextResponse.json(
-      { error: error?.message || 'Something went wrong.' },
+      { error: message },
       { status: 500 }
     );
   }

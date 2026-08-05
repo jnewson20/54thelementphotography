@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
   const temporaryPassword = generateTemporaryPassword();
   const receiverEmail = process.env.ADMIN_EMAIL?.trim() || process.env.CONTACT_RECEIVER_EMAIL?.trim() || "admin@54thelementphotography.com";
-  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const apiKey = process.env.contact_RESEND_API_KEY?.trim();
   const senderEmail = process.env.CONTACT_SENDER_EMAIL?.trim() || "onboarding@resend.dev";
   const senderName = process.env.CONTACT_SENDER_NAME?.trim() || "54th Element Photography";
 

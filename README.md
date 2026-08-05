@@ -34,7 +34,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 This project requires the following environment variables for the contact form API:
 
 ```bash
-RESEND_API_KEY=your_resend_api_key_here
+contact_RESEND_API_KEY=your_resend_api_key_here
 CONTACT_RECEIVER_EMAIL=your_email@example.com
 ```
 
