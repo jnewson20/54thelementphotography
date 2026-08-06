@@ -50,6 +50,8 @@ export default function RootLayout({
       </header>
         {children}
         </body>
+      <Analytics />
+      <SpeedInsights />
     </html>
   );
 }
