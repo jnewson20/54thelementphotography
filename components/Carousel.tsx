@@ -5,7 +5,7 @@ import { IMAGE_SIZES } from "../app/lib/image-sizes";
 import { toMediaSrc } from "../app/lib/media";
 
 type Slide = { src: string | StaticImageData; alt?: string };
-const TRANSITION_MS = 900;
+const TRANSITION_MS = 2000;
 
 export default function Carousel({ slides = [], interval = 5000 }: { slides: Slide[]; interval?: number }) {
   const [index, setIndex] = useState(0);
@@ -97,7 +97,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
     <div className="absolute inset-0 -z-10" aria-hidden>
       {isTransitioning && prevIndex !== null && slides[prevIndex] ? (
         <div
-          className={`absolute inset-0 z-0 transition-opacity ease-in-out ${previousVisible ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 z-0 transition-opacity ease-[cubic-bezier(0.16,1,0.3,1)] ${previousVisible ? "opacity-100" : "opacity-0"}`}
           style={{ transitionDuration: `${TRANSITION_MS}ms` }}
         >
           <Image
@@ -117,7 +117,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
       {activeSlide ? (
         <div
           key={index}
-          className={`absolute inset-0 z-10 transition-opacity ease-in-out ${activeVisible ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 z-10 transition-opacity ease-out ${activeVisible ? "opacity-100" : "opacity-0"}`}
           style={{ transitionDuration: `${TRANSITION_MS}ms` }}
           role="img"
           aria-label={activeSlide.alt || `slide-${index}`}
@@ -136,7 +136,7 @@ export default function Carousel({ slides = [], interval = 5000 }: { slides: Sli
         </div>
       ) : null}
 
-      <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+      <div className="absolute inset-0 bg-black/50 pointer-events-none" />
     </div>
   );
 }
