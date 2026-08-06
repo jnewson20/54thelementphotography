@@ -7,8 +7,8 @@ import { clearAdminAuthentication, clearTemporaryAdminPassword, consumeTemporary
 import { IMAGE_SIZES } from "../lib/image-sizes";
 import { toMediaSrc } from "../lib/media";
 
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "admin123";
+const ADMIN_USERNAME = "jaynewadmin";
+const ADMIN_PASSWORD = "Bell@LolaKoaNoah5!";
 
 type UploadSection =
   | "hero"
@@ -384,7 +384,7 @@ export default function AdminPage() {
       setLoggedIn(true);
       setMessage(isTemporaryPassword ? "Signed in with your one-time password." : "Signed in successfully.");
     } else {
-      setMessage("Use admin / admin123 to sign in, or request a temporary password.");
+      setMessage("Use check hintsto sign in, or request a temporary password.");
     }
   };
 
