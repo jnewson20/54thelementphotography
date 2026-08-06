@@ -8,14 +8,22 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
-const S3_REGION = process.env.S3_REGION;
-const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
-const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
-const S3_ENDPOINT = process.env.S3_ENDPOINT;
-const S3_PUBLIC_BASE_URL = process.env.S3_PUBLIC_BASE_URL;
-const S3_CONTENT_KEY = process.env.S3_CONTENT_KEY || "admin-content.json";
-const S3_UPLOAD_PREFIX = (process.env.S3_UPLOAD_PREFIX || "uploads").replace(/^\/+|\/+$/g, "");
+function firstEnv(...keys: string[]) {
+  for (const key of keys) {
+    const value = process.env[key]?.trim();
+    if (value) return value;
+  }
+  return "";
+}
+
+const S3_BUCKET_NAME = firstEnv("S3_BUCKET_NAME", "AWS_S3_BUCKET", "AWS_BUCKET_NAME");
+const S3_REGION = firstEnv("S3_REGION", "AWS_REGION", "AWS_DEFAULT_REGION");
+const S3_ACCESS_KEY_ID = firstEnv("S3_ACCESS_KEY_ID", "AWS_ACCESS_KEY_ID");
+const S3_SECRET_ACCESS_KEY = firstEnv("S3_SECRET_ACCESS_KEY", "AWS_SECRET_ACCESS_KEY");
+const S3_ENDPOINT = firstEnv("S3_ENDPOINT", "AWS_ENDPOINT_URL_S3", "AWS_ENDPOINT_URL");
+const S3_PUBLIC_BASE_URL = firstEnv("S3_PUBLIC_BASE_URL");
+const S3_CONTENT_KEY = firstEnv("S3_CONTENT_KEY") || "admin-content.json";
+const S3_UPLOAD_PREFIX = (firstEnv("S3_UPLOAD_PREFIX") || "uploads").replace(/^\/+|\/+$/g, "");
 
 function getS3Client() {
   if (!isS3Configured()) {
@@ -116,6 +124,22 @@ function parseS3KeyFromUrl(src: string) {
 
 export function isS3Configured() {
   return Boolean(S3_BUCKET_NAME && S3_REGION && S3_ACCESS_KEY_ID && S3_SECRET_ACCESS_KEY);
+}
+
+export function getS3ConfigurationStatus() {
+  const required = [
+    { present: Boolean(S3_BUCKET_NAME), label: "S3_BUCKET_NAME (or AWS_S3_BUCKET/AWS_BUCKET_NAME)" },
+    { present: Boolean(S3_REGION), label: "S3_REGION (or AWS_REGION/AWS_DEFAULT_REGION)" },
+    { present: Boolean(S3_ACCESS_KEY_ID), label: "S3_ACCESS_KEY_ID (or AWS_ACCESS_KEY_ID)" },
+    { present: Boolean(S3_SECRET_ACCESS_KEY), label: "S3_SECRET_ACCESS_KEY (or AWS_SECRET_ACCESS_KEY)" },
+  ];
+
+  const missing = required.filter((entry) => !entry.present).map((entry) => entry.label);
+
+  return {
+    configured: missing.length === 0,
+    missing,
+  };
 }
 
 export function isS3Source(src: string) {

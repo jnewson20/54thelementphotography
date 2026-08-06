@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { getDefaultContent, type AdminClient, type AdminPageContent, type AdminPortfolioItem } from "../admin/content";
-import { isS3Configured, readS3ContentObject, writeS3ContentObject } from "./server-storage";
+import { getS3ConfigurationStatus, isS3Configured, readS3ContentObject, writeS3ContentObject } from "./server-storage";
 
 const DATA_DIR = path.join(process.cwd(), "storage");
 const CONTENT_PATH = path.join(DATA_DIR, "admin-content.json");
@@ -109,8 +109,13 @@ export async function saveContentServer(content: AdminPageContent): Promise<void
   }
 
   if (!persisted) {
+    const s3Status = getS3ConfigurationStatus();
+    const missingS3Vars = s3Status.missing.length
+      ? ` Missing S3 environment variables: ${s3Status.missing.join(", ")}.`
+      : "";
+
     throw new Error(
-      `${lastError?.message || "Unable to save content."} Configure S3 storage for production persistence.`
+      `${lastError?.message || "Unable to save content."}${missingS3Vars} Configure S3 storage for production persistence.`
     );
   }
 }
