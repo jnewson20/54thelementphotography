@@ -7,11 +7,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = {
   title: "54TH ELEMENT | Photography",
   description: "Contemporary photography — editorial, travel, and portrait.",
-  icons: {
-    icon: "/Favicon.png",
-    shortcut: "/Favicon.png",
-    apple: "/Favicon.png",
-  },
 };
 
 export default function RootLayout({
