@@ -18,7 +18,8 @@ const PUBLIC_ENDPOINT = process.env.S3_ENDPOINT;
 const PUBLIC_BASE_URL = process.env.S3_PUBLIC_BASE_URL;
 const PUBLIC_PREFIX = (process.env.S3_UPLOAD_PREFIX || "assets").replace(/^\/+|\/+$/g, "") || "assets";
 
-const PRIVATE_BUCKET_NAME = process.env.S3_PRIVATE_BUCKET_NAME;
+// Without a dedicated private bucket, originals go to the main bucket under a separate prefix.
+const PRIVATE_BUCKET_NAME = process.env.S3_PRIVATE_BUCKET_NAME || PUBLIC_BUCKET_NAME;
 const PRIVATE_REGION = process.env.S3_PRIVATE_REGION || PUBLIC_REGION;
 const PRIVATE_ACCESS_KEY_ID = process.env.S3_PRIVATE_ACCESS_KEY_ID || PUBLIC_ACCESS_KEY_ID;
 const PRIVATE_SECRET_ACCESS_KEY = process.env.S3_PRIVATE_SECRET_ACCESS_KEY || PUBLIC_SECRET_ACCESS_KEY;
