@@ -32,42 +32,72 @@ function moveItem<T>(items: T[], from: number, to: number): T[] {
   return next;
 }
 
-async function uploadImageFileWithProgress(file: File, section: UploadSection, onProgress?: (loaded: number, total: number) => void) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("section", section);
+const DIRECT_UPLOAD_LIMIT = 3.5 * 1024 * 1024;
+const CHUNK_SIZE = 3 * 1024 * 1024;
 
-  return new Promise<{ src: string; originalKey?: string; warning?: string }>((resolve, reject) => {
+type UploadResult = { src: string; originalKey?: string; warning?: string };
+
+function postFormWithProgress(url: string, formData: FormData, onProgress?: (loaded: number) => void) {
+  return new Promise<unknown>((resolve, reject) => {
     const request = new XMLHttpRequest();
-    request.open("POST", "/api/admin/upload");
-
+    request.open("POST", url);
     request.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        onProgress?.(event.loaded, event.total || file.size);
-      }
+      if (event.lengthComputable) onProgress?.(event.loaded);
     };
-
-    request.onerror = () => reject(new Error("Unable to upload image."));
-
+    request.onerror = () => reject(new Error("Unable to upload image. Check your connection and try again."));
     request.onload = () => {
-      let payload: unknown = null;
+      let payload: { error?: string } | null = null;
       try {
         payload = JSON.parse(request.responseText);
       } catch {
         payload = null;
       }
-
-          const typed = payload as { src?: string; originalKey?: string; error?: string; warning?: string } | null;
-      if (request.status < 200 || request.status >= 300 || !typed?.src) {
-        reject(new Error(typed?.error || "Unable to upload image."));
+      if (request.status < 200 || request.status >= 300) {
+        reject(new Error(payload?.error || `Upload failed (HTTP ${request.status}).`));
         return;
       }
-
-      resolve({ src: typed.src, originalKey: typed.originalKey, warning: typed.warning });
+      resolve(payload);
     };
-
     request.send(formData);
   });
+}
+
+async function postJson(url: string, body: unknown) {
+  const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(payload?.error || `Upload failed (HTTP ${response.status}).`);
+  }
+  return payload;
+}
+
+async function uploadImageFileWithProgress(file: File, section: UploadSection, onProgress?: (loaded: number, total: number) => void): Promise<UploadResult> {
+  if (file.size <= DIRECT_UPLOAD_LIMIT) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("section", section);
+    const payload = (await postFormWithProgress("/api/admin/upload", formData, (loaded) => onProgress?.(loaded, file.size))) as UploadResult | null;
+    if (!payload?.src) throw new Error("Unable to upload image.");
+    return payload;
+  }
+
+  // Hosting limits request bodies to a few MB, so larger photos are sent in pieces.
+  const uploadId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+  for (let index = 0; index < totalChunks; index += 1) {
+    const start = index * CHUNK_SIZE;
+    const formData = new FormData();
+    formData.append("uploadId", uploadId);
+    formData.append("index", String(index));
+    formData.append("chunk", file.slice(start, start + CHUNK_SIZE), "chunk");
+    await postFormWithProgress("/api/admin/upload/chunk", formData, (loaded) => onProgress?.(Math.min(file.size, start + loaded), file.size));
+  }
+
+  const payload = await postJson("/api/admin/upload/complete", { uploadId, totalChunks, section, fileName: file.name, contentType: file.type });
+  onProgress?.(file.size, file.size);
+  if (!payload?.src) throw new Error("Unable to upload image.");
+  return payload as UploadResult;
 }
 
 function formatBytes(value: number) {
@@ -790,6 +820,7 @@ export default function AdminPage() {
       const uploads: Array<{ src: string; originalKey?: string; warning?: string }> = [];
       let completedBytes = 0;
       let failedCount = 0;
+      let lastError = "";
       for (const file of items) {
         const result = await uploadImageFileWithProgress(file, uploadMeta.apiSection, (loaded, total) => {
           setUploadProgress((current) => {
@@ -819,7 +850,10 @@ export default function AdminPage() {
             section.baseLoaded + Math.min(totalBytes, completedBytes + Math.min(loaded, total || file.size)),
             section.nextTotal
           );
-        }).catch(() => null);
+        }).catch((error: unknown) => {
+          lastError = error instanceof Error ? error.message : "";
+          return null;
+        });
         if (!result) {
           failedCount += 1;
           completedBytes += file.size;
@@ -871,10 +905,14 @@ export default function AdminPage() {
         )
       );
       if (failedCount > 0) {
-        setMessage(`${failedCount} of ${items.length} images failed to upload.`);
+        const text = `${failedCount} of ${items.length} images failed to upload.${lastError ? ` ${lastError}` : ""}`;
+        setMessage(text);
+        window.alert(text);
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to upload images.");
+      const text = error instanceof Error ? error.message : "Unable to upload images.";
+      setMessage(text);
+      window.alert(text);
     } finally {
       setUploadProgress(null);
     }
@@ -1035,7 +1073,9 @@ export default function AdminPage() {
         updateServices(next);
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to upload image.");
+      const text = error instanceof Error ? error.message : "Unable to upload image.";
+      setMessage(text);
+      window.alert(text);
     } finally {
       setUploadProgress(null);
     }

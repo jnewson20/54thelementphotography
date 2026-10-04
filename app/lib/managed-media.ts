@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
-import sharp from "sharp";
+import os from "os";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -123,16 +123,24 @@ function streamToBuffer(body: unknown) {
   });
 }
 
-async function buildPreviewAndOriginal(buffer: Buffer) {
-  const image = sharp(buffer).rotate();
-  const original = await image.clone().jpeg({ quality: 95, mozjpeg: true }).toBuffer();
-  const preview = await image
-    .clone()
-    .resize({ width: 1600, fit: "inside", withoutEnlargement: true })
-    .avif({ quality: 30, effort: 8 })
-    .toBuffer();
+async function buildPreviewAndOriginal(buffer: Buffer, contentType: string) {
+  try {
+    const sharp = (await import("sharp")).default;
+    const image = sharp(buffer).rotate();
+    const original = await image.clone().jpeg({ quality: 95, mozjpeg: true }).toBuffer();
+    const preview = await image
+      .clone()
+      .resize({ width: 1600, fit: "inside", withoutEnlargement: true })
+      .avif({ quality: 30, effort: 4 })
+      .toBuffer();
 
-  return { original, preview };
+    return { original, preview, previewExt: "avif", previewType: "image/avif", originalExt: "jpg", originalType: "image/jpeg" };
+  } catch (error) {
+    // Image processing is unavailable (e.g. native module missing); store the file as uploaded.
+    console.error("sharp processing failed, storing original file unchanged", error);
+    const ext = (contentType.split("/")[1] || "jpg").replace("jpeg", "jpg").replace(/[^a-z0-9]/gi, "") || "jpg";
+    return { original: buffer, preview: buffer, previewExt: ext, previewType: contentType, originalExt: ext, originalType: contentType };
+  }
 }
 
 async function ensureLocalDirectory(filePath: string) {
@@ -156,11 +164,12 @@ export async function uploadManagedImage(input: {
   buffer: Buffer;
   originalFileName?: string;
   sectionPath: string[];
+  contentType?: string;
 }) : Promise<ManagedImageUploadResult> {
-  const { original, preview } = await buildPreviewAndOriginal(input.buffer);
+  const { original, preview, previewExt, previewType, originalExt, originalType } = await buildPreviewAndOriginal(input.buffer, input.contentType || "image/jpeg");
   const fileName = buildFileName(input.originalFileName);
-  const previewFileName = `${fileName}.avif`;
-  const originalFileName = `${fileName}.jpg`;
+  const previewFileName = `${fileName}.${previewExt}`;
+  const originalFileName = `${fileName}.${originalExt}`;
   const publicKey = buildManagedKey(PUBLIC_PREFIX, input.sectionPath, previewFileName);
   const privateKey = buildManagedKey(PRIVATE_PREFIX, input.sectionPath, originalFileName);
 
@@ -171,7 +180,7 @@ export async function uploadManagedImage(input: {
         Bucket: PUBLIC_BUCKET_NAME,
         Key: publicKey,
         Body: preview,
-        ContentType: "image/avif",
+        ContentType: previewType,
         CacheControl: "public, max-age=31536000, immutable",
       })
     );
@@ -187,7 +196,7 @@ export async function uploadManagedImage(input: {
         Bucket: PRIVATE_BUCKET_NAME,
         Key: privateKey,
         Body: original,
-        ContentType: "image/jpeg",
+        ContentType: originalType,
         ContentDisposition: `attachment; filename="${originalFileName}"`,
         CacheControl: "private, max-age=31536000, immutable",
       })
@@ -300,4 +309,59 @@ export function sectionSegmentsFromKey(key: string) {
 
 export function sectionKeyFromSegments(sectionPath: string[]) {
   return sectionKeyPath(sectionPath);
+}
+
+const STAGING_PREFIX = "tmp-uploads";
+
+function stagingKey(uploadId: string, index: number) {
+  if (!/^[a-zA-Z0-9_-]{8,64}$/.test(uploadId)) {
+    throw new Error("Invalid upload id.");
+  }
+  return `${STAGING_PREFIX}/${uploadId}/${index}`;
+}
+
+// Large photos exceed the serverless request-size limit, so they arrive in chunks and are staged until complete.
+export async function stageUploadChunk(uploadId: string, index: number, data: Buffer) {
+  const key = stagingKey(uploadId, index);
+  const client = getPublicS3Client();
+  if (client) {
+    await client.send(new PutObjectCommand({ Bucket: PUBLIC_BUCKET_NAME, Key: key, Body: data, ContentType: "application/octet-stream" }));
+  } else {
+    await writeLocalFile(path.join(os.tmpdir(), key), data);
+  }
+}
+
+export async function assembleStagedUpload(uploadId: string, totalChunks: number) {
+  const client = getPublicS3Client();
+  const parts: Buffer[] = [];
+
+  for (let index = 0; index < totalChunks; index += 1) {
+    const key = stagingKey(uploadId, index);
+    if (client) {
+      const response = await client.send(new GetObjectCommand({ Bucket: PUBLIC_BUCKET_NAME, Key: key }));
+      parts.push(await streamToBuffer(response.Body));
+    } else {
+      parts.push(await fs.readFile(path.join(os.tmpdir(), key)));
+    }
+  }
+
+  return Buffer.concat(parts);
+}
+
+export async function clearStagedUpload(uploadId: string, totalChunks: number) {
+  const client = getPublicS3Client();
+  await Promise.all(
+    Array.from({ length: totalChunks }, async (_, index) => {
+      const key = stagingKey(uploadId, index);
+      try {
+        if (client) {
+          await client.send(new DeleteObjectCommand({ Bucket: PUBLIC_BUCKET_NAME, Key: key }));
+        } else {
+          await fs.rm(path.join(os.tmpdir(), key), { force: true });
+        }
+      } catch {
+        // Best-effort cleanup.
+      }
+    })
+  );
 }

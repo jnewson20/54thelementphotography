@@ -1,41 +1,20 @@
 import { NextResponse } from "next/server";
 import { uploadManagedImage } from "../../../lib/managed-media";
+import { resolveSectionPath } from "../../../lib/upload-sections";
 
-type UploadSection =
-  | "hero"
-  | "home-portfolio"
-  | "gallery-portrait"
-  | "gallery-wedding"
-  | "gallery-branding"
-  | "client-login"
-  | "client-cover"
-  | "client-gallery";
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const uploaded = formData.get("file");
-    const section = formData.get("section");
+    const sectionPath = resolveSectionPath(formData.get("section"));
 
     if (!(uploaded instanceof File)) {
       return NextResponse.json({ error: "file is required" }, { status: 400 });
     }
 
-    if (typeof section !== "string") {
-      return NextResponse.json({ error: "section is required" }, { status: 400 });
-    }
-
-    const typedSection = section as UploadSection;
-    if (
-      typedSection !== "hero" &&
-      typedSection !== "home-portfolio" &&
-      typedSection !== "gallery-portrait" &&
-      typedSection !== "gallery-wedding" &&
-      typedSection !== "gallery-branding" &&
-      typedSection !== "client-login" &&
-      typedSection !== "client-cover" &&
-      typedSection !== "client-gallery"
-    ) {
+    if (!sectionPath) {
       return NextResponse.json({ error: "invalid section" }, { status: 400 });
     }
 
@@ -43,32 +22,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Only image uploads are allowed." }, { status: 400 });
     }
 
-    const arrayBuffer = await uploaded.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const sectionPath =
-      typedSection === "hero"
-        ? ["hero"]
-        : typedSection === "home-portfolio"
-          ? ["home-portfolio"]
-          : typedSection === "gallery-portrait"
-            ? ["gallery", "portrait"]
-            : typedSection === "gallery-wedding"
-              ? ["gallery", "wedding"]
-              : typedSection === "gallery-branding"
-                ? ["gallery", "branding-media"]
-                : typedSection === "client-gallery"
-                  ? ["client-gallery"]
-                  : ["client-login"];
-
     const result = await uploadManagedImage({
-      buffer,
+      buffer: Buffer.from(await uploaded.arrayBuffer()),
       originalFileName: uploaded.name,
       sectionPath,
+      contentType: uploaded.type,
     });
 
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json({ error: "Unable to upload image." }, { status: 500 });
+  } catch (error) {
+    console.error("Image upload failed", error);
+    return NextResponse.json({ error: `Unable to upload image: ${error instanceof Error ? error.message : "unknown error"}` }, { status: 500 });
   }
 }
