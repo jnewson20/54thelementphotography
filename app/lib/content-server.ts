@@ -29,7 +29,7 @@ function sanitizeClients(incoming: Partial<AdminClient>[] | undefined, fallback:
   const next = Array.isArray(incoming) ? incoming : fallback;
 
   return next.map((client, index) => {
-    const base = fallback[index] ?? fallback[0];
+    const base = fallback.find((entry) => entry.id === client?.id) ?? fallback[index] ?? fallback[0];
     return {
       id: client?.id || base.id,
       name: client?.name || base.name,
@@ -37,7 +37,7 @@ function sanitizeClients(incoming: Partial<AdminClient>[] | undefined, fallback:
       password: client?.password || base.password,
       galleryTitle: client?.galleryTitle || base.galleryTitle || client?.name || base.name,
       coverImage: client?.coverImage || base.coverImage || getDefaultContent().clientLoginBackground,
-      coverImageOriginalKey: client?.coverImageOriginalKey || base.coverImageOriginalKey,
+      coverImageOriginalKey: client?.coverImageOriginalKey || (base.id === client?.id ? base.coverImageOriginalKey : undefined),
       images: Array.isArray(client?.images) ? client.images : Array.isArray(base.images) ? base.images : [],
     };
   });

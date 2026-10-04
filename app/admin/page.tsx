@@ -450,6 +450,14 @@ export default function AdminPage() {
     setContent((current) => ({ ...current, clients: next }));
     saveClientAuthSnapshot(next);
   };
+  // Functional update so concurrent uploads never overwrite each other with stale state.
+  const patchClients = (updater: (clients: AdminClient[]) => AdminClient[]) => {
+    setContent((current) => {
+      const clients = updater(current.clients);
+      saveClientAuthSnapshot(clients);
+      return { ...current, clients };
+    });
+  };
   const updateServices = (next: AdminServiceGroup[]) => {
     setContent((current) => ({ ...current, services: next }));
   };
@@ -781,6 +789,7 @@ export default function AdminPage() {
 
       const uploads: Array<{ src: string; originalKey?: string; warning?: string }> = [];
       let completedBytes = 0;
+      let failedCount = 0;
       for (const file of items) {
         const result = await uploadImageFileWithProgress(file, uploadMeta.apiSection, (loaded, total) => {
           setUploadProgress((current) => {
@@ -810,7 +819,12 @@ export default function AdminPage() {
             section.baseLoaded + Math.min(totalBytes, completedBytes + Math.min(loaded, total || file.size)),
             section.nextTotal
           );
-        });
+        }).catch(() => null);
+        if (!result) {
+          failedCount += 1;
+          completedBytes += file.size;
+          continue;
+        }
         uploads.push(result);
         completedBytes += file.size;
         setUploadProgress((current) => {
@@ -842,15 +856,23 @@ export default function AdminPage() {
         setMessage(firstWarning);
       }
 
-      const next = [...content.clients];
-      next[clientIndex] = {
-        ...next[clientIndex],
-        images: [
-          ...next[clientIndex].images,
-          ...uploads.map((entry, index) => ({ id: createId(`client-image-${index}`), src: entry.src, originalKey: entry.originalKey, alt: `Client image ${next[clientIndex].images.length + index + 1}` })),
-        ],
-      };
-      updateClients(next);
+      const targetId = content.clients[clientIndex]?.id;
+      patchClients((clients) =>
+        clients.map((client) =>
+          client.id === targetId
+            ? {
+                ...client,
+                images: [
+                  ...client.images,
+                  ...uploads.map((entry, index) => ({ id: createId(`client-image-${index}`), src: entry.src, originalKey: entry.originalKey, alt: `Client image ${client.images.length + index + 1}` })),
+                ],
+              }
+            : client
+        )
+      );
+      if (failedCount > 0) {
+        setMessage(`${failedCount} of ${items.length} images failed to upload.`);
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to upload images.");
     } finally {
@@ -973,25 +995,24 @@ export default function AdminPage() {
         return;
       }
       if (target === "client") {
-        const next = [...content.clients];
-        const previous = next[clientIndex ?? 0]?.images[index ?? 0]?.src;
-        removeManagedImages([previous]);
-        next[clientIndex ?? 0] = {
-          ...next[clientIndex ?? 0],
-          images: next[clientIndex ?? 0].images.map((img, imgIndex) => (imgIndex === index ? { ...img, src: dataUrl, originalKey } : img)),
-        };
-        updateClients(next);
+        const targetClient = content.clients[clientIndex ?? 0];
+        const imageId = targetClient?.images[index ?? 0]?.id;
+        removeManagedImages([targetClient?.images[index ?? 0]?.src]);
+        patchClients((clients) =>
+          clients.map((client) =>
+            client.id === targetClient?.id
+              ? { ...client, images: client.images.map((img) => (img.id === imageId ? { ...img, src: dataUrl, originalKey } : img)) }
+              : client
+          )
+        );
         return;
       }
       if (target === "client-cover") {
-        const next = [...content.clients];
-        removeManagedImages([next[clientIndex ?? 0]?.coverImage]);
-        next[clientIndex ?? 0] = {
-          ...next[clientIndex ?? 0],
-          coverImage: dataUrl,
-          coverImageOriginalKey: originalKey,
-        };
-        updateClients(next);
+        const targetClient = content.clients[clientIndex ?? 0];
+        removeManagedImages([targetClient?.coverImage]);
+        patchClients((clients) =>
+          clients.map((client) => (client.id === targetClient?.id ? { ...client, coverImage: dataUrl, coverImageOriginalKey: originalKey } : client))
+        );
         return;
       }
       if (target === "gallery") {
